@@ -1,0 +1,10 @@
+samples/
+out/
+__pycache__/
+*.pyc
+.venv/
+# CI(GitHub Actions)에서 빌드되는 wasm 산출물
+web/g3d.mjs
+web/g3d.wasm
+wasm/ffbuild/
+wasm/ffmpeg-*/

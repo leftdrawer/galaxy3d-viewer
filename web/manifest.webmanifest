@@ -1,0 +1,10 @@
+{
+  "name": "갤럭시 3D 뷰어",
+  "short_name": "3D 뷰어",
+  "start_url": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#0b0b0c",
+  "theme_color": "#0b0b0c",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

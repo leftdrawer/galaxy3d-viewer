@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>갤럭시 3D 뷰어</title>
+<meta name="description" content="갤럭시 3D 사진·영상을 매직아이(평행법·교차법)로 보는 뷰어. 파일은 기기 밖으로 나가지 않습니다.">
+<meta name="theme-color" content="#0b0b0c">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<style>
+  :root {
+    --bg: #0b0b0c; --panel: rgba(24, 24, 27, .82); --line: #2c2c31; --text: #ececf1; --dim: #9b9ba6;
+    --accent: #f2b544; --err: #ff7a6b;
+    font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); }
+  button, a.btn {
+    font: inherit; font-size: 15px; color: var(--text); background: #1d1d21; border: 1px solid var(--line);
+    border-radius: 10px; padding: 10px 14px; cursor: pointer; text-decoration: none; white-space: nowrap;
+  }
+  button:hover, a.btn:hover { border-color: #46464e; }
+  button.on { border-color: var(--accent); color: var(--accent); }
+  [hidden] { display: none !important; }
+
+  #home { max-width: 560px; margin: 0 auto; padding: 56px 16px 32px; }
+  h1 { font-size: 28px; margin: 0 0 6px; letter-spacing: -.02em; }
+  .sub { color: var(--dim); margin: 0 0 28px; }
+  .drop {
+    display: flex; flex-direction: column; gap: 8px; align-items: center; justify-content: center; text-align: center;
+    min-height: 220px; padding: 24px; border: 1.5px dashed #3a3a42; border-radius: 18px; cursor: pointer;
+    transition: border-color .15s, background .15s;
+  }
+  .drop:hover, .drop.over { border-color: var(--accent); background: rgba(242, 181, 68, .05); }
+  .drop strong { font-size: 18px; }
+  .drop span { color: var(--dim); font-size: 14px; }
+  .note { color: var(--dim); font-size: 13px; margin-top: 14px; }
+  #busy { margin-top: 24px; }
+  .bar { height: 6px; background: #1d1d21; border-radius: 3px; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+  #busytext { color: var(--dim); font-size: 14px; font-variant-numeric: tabular-nums; }
+  .err { color: var(--err); margin-top: 18px; line-height: 1.5; }
+  details { margin-top: 32px; color: var(--dim); font-size: 14px; line-height: 1.6; }
+  summary { cursor: pointer; color: var(--text); }
+
+  #view { position: fixed; inset: 0; background: #000; }
+  #cv { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: manipulation; }
+  #ui { position: absolute; inset: 0; pointer-events: none; transition: opacity .25s; }
+  #ui.hide { opacity: 0; }
+  #ui.hide * { pointer-events: none !important; }
+  .row { position: absolute; left: 0; right: 0; display: flex; gap: 8px; align-items: center; padding: 12px 16px;
+         padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+  .row > * { pointer-events: auto; }
+  .row.top { top: 0; }
+  .row.bottom { bottom: 0; padding-bottom: max(12px, env(safe-area-inset-bottom)); flex-wrap: wrap; }
+  #msg { color: var(--accent); font-size: 13px; text-shadow: 0 1px 2px #000; pointer-events: none; }
+  #seek { flex: 1; min-width: 120px; accent-color: var(--accent); }
+  .spacer { flex: 1; }
+  #panel {
+    position: absolute; right: 16px; bottom: 72px; width: min(340px, calc(100% - 32px)); max-height: calc(100% - 140px);
+    overflow: auto; pointer-events: auto; background: var(--panel); backdrop-filter: blur(12px);
+    border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px;
+  }
+  #panel label { display: block; font-size: 14px; margin: 10px 0 2px; }
+  #panel label b { float: right; font-weight: 500; color: var(--accent); font-variant-numeric: tabular-nums; }
+  #panel input[type=range] { width: 100%; accent-color: var(--accent); }
+  #panel .hint { color: var(--dim); font-size: 12px; margin: 2px 0 0; }
+  #panel .btns { display: flex; gap: 8px; margin-top: 14px; }
+
+  dialog { background: #141417; color: var(--text); border: 1px solid var(--line); border-radius: 16px; padding: 20px; max-width: min(560px, 94vw); }
+  dialog::backdrop { background: rgba(0, 0, 0, .7); }
+  dialog h2 { margin: 0 0 6px; font-size: 18px; }
+  dialog p { color: var(--dim); margin: 0 0 16px; font-size: 14px; line-height: 1.5; }
+  #card { border: 2px solid var(--accent); border-radius: 12px; margin: 0 auto 16px; background: rgba(242, 181, 68, .08); }
+  #calScale { width: 100%; accent-color: var(--accent); }
+  dialog .btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+</style>
+</head>
+<body>
+<main id="home">
+  <h1>갤럭시 3D 뷰어</h1>
+  <p class="sub">3D 사진·영상을 매직아이(평행법·교차법)로 봅니다.</p>
+  <label id="drop" class="drop">
+    <input type="file" id="file" accept=".heic,.heif,.mp4,.mov,.jpg,.jpeg,.png,.webp" hidden>
+    <strong>파일을 끌어다 놓거나 눌러서 고르세요</strong>
+    <span>갤럭시 3D 원본(HEIC·MP4) 또는 좌우가 나란한 SBS 파일</span>
+  </label>
+  <p class="note">파일은 이 기기 안에서만 처리되고 어디로도 올라가지 않습니다.</p>
+  <div id="busy" hidden>
+    <div class="bar"><i id="barfill"></i></div>
+    <p id="busytext"></p>
+  </div>
+  <p id="err" class="err" hidden></p>
+  <details>
+    <summary>보는 법</summary>
+    <p><b>평행법</b>: 화면 너머 먼 곳을 보듯 초점을 풀면 두 그림이 겹쳐 가운데에 입체가 떠오릅니다. 그림 사이 간격이 눈 사이(약 63mm)보다 좁아야 합니다.<br>
+    <b>교차법</b>: 코끝을 보듯 살짝 사시를 뜨면 겹칩니다. 그림이 커도 됩니다.<br>
+    그림 위 흰 점 두 개가 세 개로 보이면 가운데 점이 맞춰진 상태입니다. 처음엔 보조점에 집중해 보세요.</p>
+    <p>폰에서는 가로로 눕히고 <b>전체화면</b>을 누르세요. 처음 한 번은 <b>크기 보정</b>(신용카드)을 해야 mm 단위가 정확해집니다.</p>
+  </details>
+</main>
+
+<section id="view" hidden>
+  <canvas id="cv"></canvas>
+  <video id="vid" playsinline loop hidden></video>
+  <div id="ui">
+    <div class="row top">
+      <button id="back">← 새 파일</button>
+      <span id="msg"></span>
+    </div>
+    <div class="row bottom">
+      <button id="mode" title="S 키">평행법</button>
+      <button id="play" hidden>일시정지</button>
+      <input id="seek" type="range" min="0" max="1" step="0.01" value="0" hidden>
+      <span class="spacer"></span>
+      <button id="adj">조절</button>
+      <a id="save" class="btn" hidden>SBS 저장</a>
+      <button id="fs" title="F 키">전체화면</button>
+    </div>
+    <div id="panel" hidden>
+      <label>그림 폭 <b id="vWidth"></b></label><input id="sWidth" type="range" min="20" max="250" step="1">
+      <label>그림 중심 간격 <b id="vGap"></b></label><input id="sGap" type="range" min="20" max="300" step="1">
+      <p class="hint" id="gapHint"></p>
+      <label>상하 정렬 <b id="vDy"></b></label><input id="sDy" type="range" min="-40" max="40" step="1">
+      <label>깊이(창) 이동 <b id="vShift"></b></label><input id="sShift" type="range" min="-120" max="120" step="2">
+      <p class="hint">튀어나와 불편하면 + 쪽으로 밀어 화면 뒤로 보내세요.</p>
+      <div class="btns">
+        <button id="dots">보조점</button>
+        <button id="calOpen">크기 보정</button>
+        <button id="reset">초기화</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<dialog id="calib">
+  <h2>크기 보정</h2>
+  <p>신용카드(가로 85.6mm)를 화면에 대고, 아래 상자 가로가 카드와 똑같아지도록 막대를 움직이세요. 이 값으로 mm 단위를 계산합니다.</p>
+  <div id="card"></div>
+  <input id="calScale" type="range" min="2" max="14" step="0.01">
+  <div class="btns"><button id="calCancel">취소</button><button id="calOk" class="on">완료</button></div>
+</dialog>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
