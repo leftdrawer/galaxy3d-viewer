@@ -8,3 +8,4 @@ web/g3d.mjs
 web/g3d.wasm
 wasm/ffbuild/
 wasm/ffmpeg-*/
+.claude/

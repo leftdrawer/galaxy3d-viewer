@@ -28,7 +28,6 @@ async function decodePhoto(file) {
 const OPEN_ERR = {
   [-1]: '영상을 열지 못했습니다.',
   [-3]: '영상 트랙이 없습니다.',
-  [-4]: 'HEVC 영상이 아닙니다.',
   [-6]: '디코더를 열지 못했습니다.',
   [-7]: '영상 크기가 이상합니다.',
   [-10]: '10bit·HDR 영상은 아직 지원하지 않습니다.',
@@ -59,7 +58,8 @@ async function convertVideo(file) {
   M.FS.mount(M.FS.filesystems.WORKERFS, { files: [file] }, '/in');
   try {
     const r = fn('g3d_open', 'number', ['string'])('/in/' + file.name);
-    if (r === -5) return post({ type: 'flat-video' }); // 시점 1개: SBS 영상이거나 3D 정보가 빠진 파일
+    // HEVC가 아니거나(-4) 시점이 1개(-5): SBS 영상이거나 3D 정보가 빠진 파일 → 화면에서 바로 재생해 본다
+    if (r === -4 || r === -5) return post({ type: 'flat-video' });
     if (r < 0) throw new Error(OPEN_ERR[r] ?? `영상 열기 오류 ${r}`);
 
     const W = fn('g3d_width')(), H = fn('g3d_height')(), fps = fn('g3d_fps')() || 30;
