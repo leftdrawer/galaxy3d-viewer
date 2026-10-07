@@ -55,14 +55,32 @@ worker.onmessage = async ({ data: m }) => {
     const { width: w, height: h } = m.left;
     show({ els: [m.left, m.right], rects: [[0, 0, w, h], [0, 0, w, h]], w, h },
       [m.warn, `사진 ${m.sec.toFixed(1)}초`]);
+    $('save').hidden = false;
+    $('save').removeAttribute('href');
+    $('save').onclick = async (e) => { // 누를 때만 SBS JPEG를 만든다 (8000×3000이라 미리 만들면 낭비)
+      e.preventDefault();
+      const c = new OffscreenCanvas(w * 2, h), g = c.getContext('2d');
+      g.drawImage(m.left, 0, 0);
+      g.drawImage(m.right, w, 0);
+      download(await c.convertToBlob({ type: 'image/jpeg', quality: 0.95 }), `${baseName}_SBS_LR.jpg`);
+    };
   } else if (m.type === 'video') {
     await showVideo(m.blob, m.swap);
+    $('save').onclick = null;
     $('save').href = objectUrl;
     $('save').download = `${baseName}_SBS_LR.mp4`;
     $('save').hidden = m.swap; // ponytail: 좌우가 뒤집힌 드문 경우엔 저장 대신 화면에서만 바로잡는다
     setMsg([m.warn, `변환 ${m.frames}프레임 ${m.sec.toFixed(1)}초 (${m.codec})`]);
   }
 };
+
+function download(blob, name) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 30000);
+}
 
 function busy(text, frac) {
   $('busy').hidden = false;
