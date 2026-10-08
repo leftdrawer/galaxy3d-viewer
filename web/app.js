@@ -2,9 +2,12 @@
 const $ = (id) => document.getElementById(id);
 const CARD_MM = 85.6;
 
+const PHONE = matchMedia('(pointer: coarse)').matches; // 폰·태블릿: 무조건 가로, 화면 폭을 꽉 채운다
+
 // ---------- 설정 (기기별 저장) ----------
 const DEFAULTS = {
   pxPerMm: 96 / 25.4, calibrated: false, mode: 'parallel',
+  fit: PHONE, // true면 두 그림이 화면 가로폭을 꽉 채운다(mm 설정 무시)
   parallel: { gap: 60, width: 56 }, // 평행법은 중심 간격이 눈 사이(약 63mm)보다 좁아야 한다
   cross: { gap: 110, width: 105 },
   dy: 0, shift: 0, dots: true,
@@ -30,6 +33,7 @@ addEventListener('drop', (e) => { e.preventDefault(); if (!$('home').hidden && e
 
 let current = null;
 function openFile(file) {
+  if (PHONE) landscape(); // 파일을 고른 손짓이 살아 있을 때 들어가야 전체화면이 허용된다
   current = file;
   baseName = file.name.replace(/\.[^.]+$/, '');
   const ext = file.name.split('.').pop().toLowerCase();
@@ -132,7 +136,7 @@ function show(s, msgs = []) {
   $('view').hidden = false;
   $('save').hidden = true;
   if (s.els[0] !== vid) $('play').hidden = $('seek').hidden = true;
-  setMsg([...msgs, S.calibrated ? '' : '크기 보정 전 — 조절 → 크기 보정']);
+  setMsg([...msgs, S.calibrated || S.fit ? '' : '크기 보정 전 — 조절 → 크기 보정']);
   syncUi();
   resize();
   poke();
@@ -145,15 +149,18 @@ function home() {
   $('view').hidden = true;
   $('home').hidden = false;
   $('file').value = '';
-  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  if (!PHONE && document.fullscreenElement) document.exitFullscreen().catch(() => {}); // 폰은 가로 전체화면 유지
 }
 
 function setMsg(list) { $('msg').textContent = list.filter(Boolean).join(' · '); }
 
+// 보기 영역 크기. 폰이 세로인데 가로 고정이 안 되면 CSS로 #view를 90° 돌리므로 innerWidth가 아니라 이 값을 쓴다.
+const viewSize = () => ({ vw: $('view').clientWidth, vh: $('view').clientHeight });
+
 function resize() {
-  const dpr = devicePixelRatio || 1;
-  cv.width = Math.round(innerWidth * dpr);
-  cv.height = Math.round(innerHeight * dpr);
+  const dpr = devicePixelRatio || 1, { vw, vh } = viewSize();
+  cv.width = Math.round(vw * dpr);
+  cv.height = Math.round(vh * dpr);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   draw();
 }
@@ -161,13 +168,21 @@ addEventListener('resize', resize);
 
 function draw() {
   if (!src) return;
-  const vw = innerWidth, vh = innerHeight, mm = S.pxPerMm, p = S[S.mode];
+  const { vw, vh } = viewSize(), mm = S.pxPerMm, p = S[S.mode];
   ctx.fillStyle = '#000';
   ctx.fillRect(0, 0, vw, vh);
   const aspect = src.h / src.w;
-  let w = p.width * mm, h = w * aspect;
-  if (h > vh * 0.9) { h = vh * 0.9; w = h / aspect; }
-  const gap = p.gap * mm, y = (vh - h) / 2;
+  let w, h, gap;
+  if (S.fit) { // 두 그림을 맞붙여 화면 폭을 꽉 채운다
+    w = vw / 2, h = w * aspect;
+    if (h > vh) { h = vh; w = h / aspect; }
+    gap = w;
+  } else {
+    w = p.width * mm, h = w * aspect;
+    if (h > vh * 0.9) { h = vh * 0.9; w = h / aspect; }
+    gap = p.gap * mm;
+  }
+  const y = (vh - h) / 2;
   const slotX = [vw / 2 - gap / 2 - w / 2, vw / 2 + gap / 2 - w / 2];
   const order = S.mode === 'parallel' ? [0, 1] : [1, 0]; // 슬롯별로 그릴 눈 (0 왼눈, 1 오른눈)
   const sh = Math.abs(S.shift) * (src.w / w); // 깊이 이동: 좌우 그림의 내용을 서로 반대로 민다 (원본 px)
@@ -210,13 +225,17 @@ vid.onplay = vid.onpause = () => ($('play').textContent = vid.paused ? '재생' 
 vid.ontimeupdate = () => ($('seek').value = vid.currentTime);
 $('seek').oninput = (e) => { vid.currentTime = +e.target.value; };
 
-async function fullscreen() {
+// 전체화면 + 가로 고정 + 화면 꺼짐 방지. 안드로이드 크롬은 전체화면일 때만 방향 고정을 허용한다.
+async function landscape() {
   try {
-    if (document.fullscreenElement) return document.exitFullscreen();
-    await $('view').requestFullscreen();
-    await screen.orientation?.lock?.('landscape').catch(() => {});
-    await navigator.wakeLock?.request('screen').catch(() => {});
-  } catch {}
+    if (!document.fullscreenElement) await document.documentElement.requestFullscreen({ navigationUI: 'hide' });
+    await screen.orientation?.lock?.('landscape');
+  } catch {} // 막히면 CSS 회전(index.html)이 가로로 보여 준다
+  navigator.wakeLock?.request('screen').catch(() => {});
+}
+function fullscreen() {
+  if (document.fullscreenElement && !PHONE) return document.exitFullscreen().catch(() => {});
+  landscape();
 }
 $('fs').onclick = fullscreen;
 addEventListener('keydown', (e) => {
@@ -229,18 +248,24 @@ addEventListener('keydown', (e) => {
 const sliders = [['sWidth', 'vWidth', () => S[S.mode], 'width', 'mm'], ['sGap', 'vGap', () => S[S.mode], 'gap', 'mm'],
   ['sDy', 'vDy', () => S, 'dy', 'px'], ['sShift', 'vShift', () => S, 'shift', 'px']];
 for (const [sid, , obj, key] of sliders)
-  $(sid).addEventListener('input', (e) => { obj()[key] = +e.target.value; save(); syncUi(); draw(); });
+  $(sid).addEventListener('input', (e) => {
+    if (key === 'width' || key === 'gap') S.fit = false; // 크기를 직접 만지면 꽉 채우기 해제
+    obj()[key] = +e.target.value; save(); syncUi(); draw();
+  });
+$('fit').onclick = () => { S.fit = !S.fit; save(); syncUi(); draw(); };
 
 function syncUi() {
   $('mode').textContent = S.mode === 'parallel' ? '평행법' : '교차법';
   $('dots').classList.toggle('on', S.dots);
+  $('fit').classList.toggle('on', S.fit);
   for (const [sid, vid_, obj, key, unit] of sliders) {
     $(sid).value = obj()[key];
     $(vid_).textContent = `${obj()[key] > 0 && unit === 'px' ? '+' : ''}${obj()[key]}${unit}`;
   }
-  const p = S[S.mode];
+  if (S.fit) $('vWidth').textContent = $('vGap').textContent = '꽉 채움';
+  const gap = S.fit ? viewSize().vw / 2 / S.pxPerMm : S[S.mode].gap;
   $('gapHint').textContent = S.mode === 'parallel'
-    ? (p.gap > 63 ? '평행법은 간격이 63mm(눈 사이)를 넘으면 겹치기 어렵습니다.' : '평행법은 간격 55~63mm가 편합니다.')
+    ? (gap > 63 ? '평행법은 간격이 63mm(눈 사이)를 넘으면 겹치기 어렵습니다. 안 되면 교차법이나 꽉 채우기 해제.' : '평행법은 간격 55~63mm가 편합니다.')
     : '교차법은 간격이 넓을수록 크게 볼 수 있습니다.';
 }
 

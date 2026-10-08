@@ -47,6 +47,11 @@
   summary { cursor: pointer; color: var(--text); }
 
   #view { position: fixed; inset: 0; background: #000; }
+  /* 폰이 세로인데 가로 고정이 안 된 경우: 보기 화면을 90° 돌려 무조건 가로로 보이게 한다 */
+  @media (orientation: portrait) and (pointer: coarse) {
+    #view { inset: auto; top: 0; left: 0; width: 100vh; height: 100vw; width: 100dvh;
+            transform-origin: top left; transform: translateX(100vw) rotate(90deg); }
+  }
   #cv { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: manipulation; }
   #ui { position: absolute; inset: 0; pointer-events: none; transition: opacity .25s; }
   #ui.hide { opacity: 0; }
@@ -68,7 +73,7 @@
   #panel label b { float: right; font-weight: 500; color: var(--accent); font-variant-numeric: tabular-nums; }
   #panel input[type=range] { width: 100%; accent-color: var(--accent); }
   #panel .hint { color: var(--dim); font-size: 12px; margin: 2px 0 0; }
-  #panel .btns { display: flex; gap: 8px; margin-top: 14px; }
+  #panel .btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 
   dialog { background: #141417; color: var(--text); border: 1px solid var(--line); border-radius: 16px; padding: 20px; max-width: min(560px, 94vw); }
   dialog::backdrop { background: rgba(0, 0, 0, .7); }
@@ -128,6 +133,7 @@
       <label>깊이(창) 이동 <b id="vShift"></b></label><input id="sShift" type="range" min="-120" max="120" step="2">
       <p class="hint">튀어나와 불편하면 + 쪽으로 밀어 화면 뒤로 보내세요.</p>
       <div class="btns">
+        <button id="fit">꽉 채우기</button>
         <button id="dots">보조점</button>
         <button id="calOpen">크기 보정</button>
         <button id="reset">초기화</button>

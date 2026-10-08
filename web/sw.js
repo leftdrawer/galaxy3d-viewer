@@ -1,6 +1,6 @@
 // 오프라인 동작: 앱 파일을 캐시에 두고, 있으면 캐시로 바로 띄운 뒤 뒤에서 새 버전을 받아 둔다(다음 실행에 반영).
 // 사용자 파일은 여기를 지나지 않는다(blob URL·워커 메모리에서만 처리).
-const CACHE = 'g3d-v2';
+const CACHE = 'g3d-v3';
 const SHELL = ['./', 'index.html', 'app.js', 'worker.js', 'stereo.js', 'heic.js', 'g3d.mjs', 'g3d.wasm',
   'vendor/mediabunny.min.mjs', 'vendor/libheif-bundle.mjs', 'manifest.webmanifest',
   'icon-192.png', 'icon-512.png', 'icon-maskable-512.png'];
