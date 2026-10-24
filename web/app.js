@@ -157,20 +157,53 @@ function setMsg(list) { $('msg').textContent = list.filter(Boolean).join(' · ')
 // 보기 영역 크기. 폰이 세로인데 가로 고정이 안 되면 CSS로 #view를 90° 돌리므로 innerWidth가 아니라 이 값을 쓴다.
 const viewSize = () => ({ vw: $('view').clientWidth, vh: $('view').clientHeight });
 
+const off = document.createElement('canvas'), octx = off.getContext('2d'); // 적청 모드에서 왼눈(빨강)을 따로 그릴 곳
+
 function resize() {
   const dpr = devicePixelRatio || 1, { vw, vh } = viewSize();
-  cv.width = Math.round(vw * dpr);
-  cv.height = Math.round(vh * dpr);
+  cv.width = off.width = Math.round(vw * dpr);
+  cv.height = off.height = Math.round(vh * dpr);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  octx.setTransform(dpr, 0, 0, dpr, 0, 0);
   draw();
 }
 addEventListener('resize', resize);
 
+// 깊이 이동: 좌우 그림의 내용을 서로 반대로 민다. + 면 화면 뒤로. 반환은 drawImage의 소스 인자.
+function part(eye, w) {
+  const sh = Math.abs(S.shift) * (src.w / w); // 화면 px → 원본 px
+  const [sx, sy, sw, shh] = src.rects[eye];
+  const cut = (eye === 0) === (S.shift > 0) ? sh : 0;
+  return [src.els[eye], sx + cut, sy, sw - sh, shh];
+}
+
+// 적청(빨강-청록) 안경: 왼눈은 빨강 성분, 오른눈은 초록·파랑 성분만 남겨 더한다. 빨간 렌즈가 왼눈.
+function drawAnaglyph(vw, vh) {
+  const aspect = src.h / src.w;
+  let w = vw, h = w * aspect;
+  if (h > vh) { h = vh; w = h / aspect; }
+  const x = (vw - w) / 2, y = (vh - h) / 2;
+  const tint = (c, color) => { c.globalCompositeOperation = 'multiply'; c.fillStyle = color; c.fillRect(0, 0, vw, vh); c.globalCompositeOperation = 'source-over'; };
+  octx.fillStyle = '#000';
+  octx.fillRect(0, 0, vw, vh);
+  octx.drawImage(...part(0, w), x, y, w, h);
+  tint(octx, '#f00');
+  ctx.drawImage(...part(1, w), x, y + S.dy, w, h);
+  tint(ctx, '#0ff');
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.drawImage(off, 0, 0);
+  ctx.restore();
+}
+
 function draw() {
-  if (!src) return;
   const { vw, vh } = viewSize(), mm = S.pxPerMm, p = S[S.mode];
+  if (!src || !vw || !vh) return; // 화면이 가려져 크기가 0일 땐 그리지 않는다
   ctx.fillStyle = '#000';
   ctx.fillRect(0, 0, vw, vh);
+  ctx.imageSmoothingQuality = octx.imageSmoothingQuality = 'high';
+  if (S.mode === 'anaglyph') return drawAnaglyph(vw, vh);
   const aspect = src.h / src.w;
   let w, h, gap;
   if (S.fit) { // 두 그림을 맞붙여 화면 폭을 꽉 채운다
@@ -185,12 +218,8 @@ function draw() {
   const y = (vh - h) / 2;
   const slotX = [vw / 2 - gap / 2 - w / 2, vw / 2 + gap / 2 - w / 2];
   const order = S.mode === 'parallel' ? [0, 1] : [1, 0]; // 슬롯별로 그릴 눈 (0 왼눈, 1 오른눈)
-  const sh = Math.abs(S.shift) * (src.w / w); // 깊이 이동: 좌우 그림의 내용을 서로 반대로 민다 (원본 px)
-  ctx.imageSmoothingQuality = 'high';
   order.forEach((eye, slot) => {
-    const [sx, sy, sw, shh] = src.rects[eye];
-    const cut = (eye === 0) === (S.shift > 0) ? sh : 0;
-    ctx.drawImage(src.els[eye], sx + cut, sy, sw - sh, shh, slotX[slot], y + (eye === 1 ? S.dy : 0), w, h);
+    ctx.drawImage(...part(eye, w), slotX[slot], y + (eye === 1 ? S.dy : 0), w, h);
     if (S.dots) {
       ctx.fillStyle = '#fff';
       ctx.beginPath();
@@ -211,7 +240,12 @@ function poke() {
 cv.addEventListener('pointerdown', () => (ui.classList.contains('hide') ? poke() : ui.classList.add('hide')));
 ui.addEventListener('pointerdown', poke);
 
-function toggleMode() { S.mode = S.mode === 'parallel' ? 'cross' : 'parallel'; save(); syncUi(); draw(); }
+const MODES = { parallel: '평행법', cross: '교차법', anaglyph: '적청 안경' };
+function toggleMode() {
+  const keys = Object.keys(MODES);
+  S.mode = keys[(keys.indexOf(S.mode) + 1) % keys.length];
+  save(); syncUi(); draw();
+}
 $('mode').onclick = toggleMode;
 $('back').onclick = home;
 $('adj').onclick = () => { $('panel').hidden = !$('panel').hidden; $('adj').classList.toggle('on', !$('panel').hidden); poke(); };
@@ -245,7 +279,8 @@ addEventListener('keydown', (e) => {
   else if (e.key === ' ' && src?.els[0] === vid) { e.preventDefault(); $('play').click(); }
 });
 
-const sliders = [['sWidth', 'vWidth', () => S[S.mode], 'width', 'mm'], ['sGap', 'vGap', () => S[S.mode], 'gap', 'mm'],
+const sizeOf = () => S[S.mode] ?? S.parallel; // 적청 모드엔 폭·간격이 없다(화면에 꽉 차게 한 장)
+const sliders = [['sWidth', 'vWidth', sizeOf, 'width', 'mm'], ['sGap', 'vGap', sizeOf, 'gap', 'mm'],
   ['sDy', 'vDy', () => S, 'dy', 'px'], ['sShift', 'vShift', () => S, 'shift', 'px']];
 for (const [sid, , obj, key] of sliders)
   $(sid).addEventListener('input', (e) => {
@@ -255,7 +290,9 @@ for (const [sid, , obj, key] of sliders)
 $('fit').onclick = () => { S.fit = !S.fit; save(); syncUi(); draw(); };
 
 function syncUi() {
-  $('mode').textContent = S.mode === 'parallel' ? '평행법' : '교차법';
+  $('mode').textContent = MODES[S.mode] ?? (S.mode = 'parallel', MODES.parallel);
+  const ana = S.mode === 'anaglyph';
+  for (const id of ['sizeCtl', 'fit', 'dots']) $(id).hidden = ana;
   $('dots').classList.toggle('on', S.dots);
   $('fit').classList.toggle('on', S.fit);
   for (const [sid, vid_, obj, key, unit] of sliders) {
@@ -263,10 +300,11 @@ function syncUi() {
     $(vid_).textContent = `${obj()[key] > 0 && unit === 'px' ? '+' : ''}${obj()[key]}${unit}`;
   }
   if (S.fit) $('vWidth').textContent = $('vGap').textContent = '꽉 채움';
-  const gap = S.fit ? viewSize().vw / 2 / S.pxPerMm : S[S.mode].gap;
+  const gap = S.fit ? viewSize().vw / 2 / S.pxPerMm : sizeOf().gap;
   $('gapHint').textContent = S.mode === 'parallel'
     ? (gap > 63 ? '평행법은 간격이 63mm(눈 사이)를 넘으면 겹치기 어렵습니다. 안 되면 교차법이나 꽉 채우기 해제.' : '평행법은 간격 55~63mm가 편합니다.')
     : '교차법은 간격이 넓을수록 크게 볼 수 있습니다.';
+  $('anaHint').hidden = !ana;
 }
 
 // ---------- 크기 보정 ----------

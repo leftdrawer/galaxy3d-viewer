@@ -103,6 +103,7 @@
     <summary>보는 법</summary>
     <p><b>평행법</b>: 화면 너머 먼 곳을 보듯 초점을 풀면 두 그림이 겹쳐 가운데에 입체가 떠오릅니다. 그림 사이 간격이 눈 사이(약 63mm)보다 좁아야 합니다.<br>
     <b>교차법</b>: 코끝을 보듯 살짝 사시를 뜨면 겹칩니다. 그림이 커도 됩니다.<br>
+    <b>적청 안경</b>: 빨강·청록 셀로판 안경(빨강이 왼눈)을 쓰고 그냥 보면 됩니다. 색은 조금 틀어집니다. 영화관 편광 안경은 일반 화면에서 쓸 수 없습니다.<br>
     그림 위 흰 점 두 개가 세 개로 보이면 가운데 점이 맞춰진 상태입니다. 처음엔 보조점에 집중해 보세요.</p>
     <p>폰에서는 가로로 눕히고 <b>전체화면</b>을 누르세요. 처음 한 번은 <b>크기 보정</b>(신용카드)을 해야 mm 단위가 정확해집니다.</p>
   </details>
@@ -126,9 +127,12 @@
       <button id="fs" title="F 키">전체화면</button>
     </div>
     <div id="panel" hidden>
-      <label>그림 폭 <b id="vWidth"></b></label><input id="sWidth" type="range" min="20" max="250" step="1">
-      <label>그림 중심 간격 <b id="vGap"></b></label><input id="sGap" type="range" min="20" max="300" step="1">
-      <p class="hint" id="gapHint"></p>
+      <div id="sizeCtl">
+        <label>그림 폭 <b id="vWidth"></b></label><input id="sWidth" type="range" min="20" max="250" step="1">
+        <label>그림 중심 간격 <b id="vGap"></b></label><input id="sGap" type="range" min="20" max="300" step="1">
+        <p class="hint" id="gapHint"></p>
+      </div>
+      <p class="hint" id="anaHint" hidden>빨간 렌즈를 왼쪽 눈에 대세요. 겹친 테두리가 거슬리면 깊이 이동으로 맞추세요.</p>
       <label>상하 정렬 <b id="vDy"></b></label><input id="sDy" type="range" min="-40" max="40" step="1">
       <label>깊이(창) 이동 <b id="vShift"></b></label><input id="sShift" type="range" min="-120" max="120" step="2">
       <p class="hint">튀어나와 불편하면 + 쪽으로 밀어 화면 뒤로 보내세요.</p>
