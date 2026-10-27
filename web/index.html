@@ -5,48 +5,64 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>갤럭시 3D 뷰어</title>
 <meta name="description" content="갤럭시 3D 사진·영상을 매직아이(평행법·교차법)로 보는 뷰어. 파일은 기기 밖으로 나가지 않습니다.">
-<meta name="theme-color" content="#0b0b0c">
+<meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
+  /* Apple HIG 기반: 시스템 의미 색, 강조색 하나(tint), 텍스트 스타일 단계, 조작 층에만 유리 재질 */
   :root {
-    --bg: #0b0b0c; --panel: rgba(24, 24, 27, .82); --line: #2c2c31; --text: #ececf1; --dim: #9b9ba6;
-    --accent: #f2b544; --err: #ff7a6b;
-    font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
-    color-scheme: dark;
+    --bg: #f2f2f7; --card: #fff; --panel: rgba(255, 255, 255, .72);
+    --text: #000; --dim: rgba(60, 60, 67, .6); --line: rgba(60, 60, 67, .29);
+    --fill: rgba(120, 120, 128, .16); --tint: #007aff; --err: #ff3b30;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", system-ui, sans-serif;
+    color-scheme: light dark;
+    -webkit-text-size-adjust: 100%;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #000; --card: #1c1c1e; --panel: rgba(44, 44, 46, .72);
+      --text: #fff; --dim: rgba(235, 235, 245, .6); --line: rgba(84, 84, 88, .65);
+      --fill: rgba(120, 120, 128, .36); --tint: #0a84ff; --err: #ff453a;
+    }
   }
   * { box-sizing: border-box; }
-  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); }
-  button, a.btn {
-    font: inherit; font-size: 15px; color: var(--text); background: #1d1d21; border: 1px solid var(--line);
-    border-radius: 10px; padding: 10px 14px; cursor: pointer; text-decoration: none; white-space: nowrap;
-  }
-  button:hover, a.btn:hover { border-color: #46464e; }
-  button.on { border-color: var(--accent); color: var(--accent); }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font-size: 17px; line-height: 1.3; word-break: keep-all; }
+  :focus-visible { outline: 3px solid var(--tint); outline-offset: 2px; }
   [hidden] { display: none !important; }
 
-  #home { max-width: 560px; margin: 0 auto; padding: 56px 16px 32px; }
-  h1 { font-size: 28px; margin: 0 0 6px; letter-spacing: -.02em; }
-  .sub { color: var(--dim); margin: 0 0 28px; }
+  button, a.btn {
+    font: inherit; font-size: 17px; font-weight: 500; color: var(--tint); background: var(--fill); border: 0;
+    border-radius: 999px; min-height: 44px; padding: 0 18px; cursor: pointer; text-decoration: none; white-space: nowrap;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: transform .2s cubic-bezier(.3, 1, .4, 1), background .2s;
+  }
+  button:active, a.btn:active { transform: scale(.97); }
+  button.on { background: var(--tint); color: #fff; }
+
+  #home { max-width: 560px; margin: 0 auto; padding: max(56px, env(safe-area-inset-top)) 20px 40px; }
+  h1 { font-size: 34px; line-height: 41px; font-weight: 700; margin: 0 0 8px; letter-spacing: .4px; }
+  .sub { color: var(--dim); margin: 0 0 28px; line-height: 22px; }
   .drop {
     display: flex; flex-direction: column; gap: 8px; align-items: center; justify-content: center; text-align: center;
-    min-height: 220px; padding: 24px; border: 1.5px dashed #3a3a42; border-radius: 18px; cursor: pointer;
-    transition: border-color .15s, background .15s;
+    min-height: 220px; padding: 24px; background: var(--card); border-radius: 26px; cursor: pointer;
+    box-shadow: inset 0 0 0 1.5px transparent; transition: box-shadow .2s, transform .2s cubic-bezier(.3, 1, .4, 1);
   }
-  .drop:hover, .drop.over { border-color: var(--accent); background: rgba(242, 181, 68, .05); }
-  .drop strong { font-size: 18px; }
-  .drop span { color: var(--dim); font-size: 14px; }
-  .note { color: var(--dim); font-size: 13px; margin-top: 14px; }
+  .drop:hover, .drop.over { box-shadow: inset 0 0 0 1.5px var(--tint); }
+  .drop:active { transform: scale(.98); }
+  .drop strong { font-size: 20px; line-height: 25px; font-weight: 600; }
+  .drop span { color: var(--dim); font-size: 15px; line-height: 20px; }
+  .note { color: var(--dim); font-size: 13px; line-height: 18px; margin-top: 14px; padding: 0 16px; }
   #busy { margin-top: 24px; }
-  .bar { height: 6px; background: #1d1d21; border-radius: 3px; overflow: hidden; }
-  .bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .2s; }
-  #busytext { color: var(--dim); font-size: 14px; font-variant-numeric: tabular-nums; }
-  .err { color: var(--err); margin-top: 18px; line-height: 1.5; }
-  details { margin-top: 32px; color: var(--dim); font-size: 14px; line-height: 1.6; }
-  summary { cursor: pointer; color: var(--text); }
+  .bar { height: 6px; background: var(--fill); border-radius: 3px; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--tint); transition: width .2s; }
+  #busytext { color: var(--dim); font-size: 15px; font-variant-numeric: tabular-nums; }
+  .err { color: var(--err); margin-top: 18px; line-height: 22px; }
+  details { margin-top: 32px; background: var(--card); border-radius: 26px; padding: 14px 20px; color: var(--dim); font-size: 15px; line-height: 22px; }
+  summary { cursor: pointer; color: var(--text); font-weight: 600; min-height: 24px; }
 
-  #view { position: fixed; inset: 0; background: #000; }
+  #view { position: fixed; inset: 0; background: #000; color: #fff; --dim: rgba(235, 235, 245, .6); --tint: #0a84ff; }
   /* 폰이 세로인데 가로 고정이 안 된 경우: 보기 화면을 90° 돌려 무조건 가로로 보이게 한다 */
   @media (orientation: portrait) and (pointer: coarse) {
     #view { inset: auto; top: 0; left: 0; width: 100vh; height: 100vw; width: 100dvh;
@@ -61,27 +77,41 @@
   .row > * { pointer-events: auto; }
   .row.top { top: 0; }
   .row.bottom { bottom: 0; padding-bottom: max(12px, env(safe-area-inset-bottom)); flex-wrap: wrap; }
-  #msg { color: var(--accent); font-size: 13px; text-shadow: 0 1px 2px #000; pointer-events: none; }
-  #seek { flex: 1; min-width: 120px; accent-color: var(--accent); }
+  /* 조작 층(위·아래 막대, 패널, 보기 화면 안 버튼)만 유리 재질 */
+  #view button, #view a.btn {
+    color: #fff; background: rgba(60, 60, 67, .55);
+    -webkit-backdrop-filter: blur(30px) saturate(140%); backdrop-filter: blur(30px) saturate(140%);
+  }
+  #view button.on { background: var(--tint); }
+  #msg { color: #fff; font-size: 13px; line-height: 18px; text-shadow: 0 1px 3px rgba(0, 0, 0, .8); pointer-events: none; }
+  #seek { flex: 1; min-width: 120px; accent-color: var(--tint); }
   .spacer { flex: 1; }
   #panel {
-    position: absolute; right: 16px; bottom: 72px; width: min(340px, calc(100% - 32px)); max-height: calc(100% - 140px);
-    overflow: auto; pointer-events: auto; background: var(--panel); backdrop-filter: blur(12px);
-    border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px;
+    position: absolute; right: max(16px, env(safe-area-inset-right)); bottom: 76px; width: min(340px, calc(100% - 32px)); max-height: calc(100% - 140px);
+    overflow: auto; pointer-events: auto; background: rgba(44, 44, 46, .72);
+    -webkit-backdrop-filter: blur(30px) saturate(140%); backdrop-filter: blur(30px) saturate(140%);
+    border-radius: 26px; padding: 16px 20px;
   }
-  #panel label { display: block; font-size: 14px; margin: 10px 0 2px; }
-  #panel label b { float: right; font-weight: 500; color: var(--accent); font-variant-numeric: tabular-nums; }
-  #panel input[type=range] { width: 100%; accent-color: var(--accent); }
-  #panel .hint { color: var(--dim); font-size: 12px; margin: 2px 0 0; }
+  #panel label { display: block; font-size: 15px; line-height: 20px; margin: 12px 0 4px; }
+  #panel label b { float: right; font-weight: 600; color: var(--tint); font-variant-numeric: tabular-nums; }
+  #panel input[type=range] { width: 100%; min-height: 28px; accent-color: var(--tint); }
+  #panel .hint { color: var(--dim); font-size: 13px; line-height: 18px; margin: 2px 0 0; }
   #panel .btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 
-  dialog { background: #141417; color: var(--text); border: 1px solid var(--line); border-radius: 16px; padding: 20px; max-width: min(560px, 94vw); }
-  dialog::backdrop { background: rgba(0, 0, 0, .7); }
-  dialog h2 { margin: 0 0 6px; font-size: 18px; }
-  dialog p { color: var(--dim); margin: 0 0 16px; font-size: 14px; line-height: 1.5; }
-  #card { border: 2px solid var(--accent); border-radius: 12px; margin: 0 auto 16px; background: rgba(242, 181, 68, .08); }
-  #calScale { width: 100%; accent-color: var(--accent); }
+  dialog { background: var(--card); color: var(--text); border: 0; border-radius: 34px; padding: 24px; max-width: min(560px, 94vw); }
+  dialog::backdrop { background: rgba(0, 0, 0, .4); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+  dialog h2 { margin: 0 0 8px; font-size: 22px; line-height: 28px; font-weight: 700; }
+  dialog p { color: var(--dim); margin: 0 0 16px; font-size: 15px; line-height: 20px; }
+  #card { border: 2px solid var(--tint); border-radius: 12px; margin: 0 auto 16px; background: color-mix(in srgb, var(--tint) 10%, transparent); }
+  #calScale { width: 100%; accent-color: var(--tint); }
   dialog .btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+
+  /* 투명도 줄이기·움직임 줄이기 설정 존중 */
+  @media (prefers-reduced-transparency: reduce) {
+    #view button, #view a.btn { background: #3a3a3c; -webkit-backdrop-filter: none; backdrop-filter: none; }
+    #panel { background: #2c2c2e; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
 </style>
 </head>
 <body>
