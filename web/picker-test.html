@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>사진 선택기 시험</title>
+<style>
+  body { margin: 0; background: #f2f2f7; color: #000; font: 17px/1.4 system-ui, "Apple SD Gothic Neo", sans-serif; }
+  @media (prefers-color-scheme: dark) { body { background: #000; color: #fff; } .card { background: #1c1c1e; } }
+  .wrap { max-width: 560px; margin: 0 auto; padding: 20px; }
+  h1 { font-size: 22px; }
+  p { color: #666; } @media (prefers-color-scheme: dark){ p{color:#aaa;} }
+  .card { background: #fff; border-radius: 20px; padding: 16px; margin: 12px 0; }
+  button { font: inherit; font-weight: 600; width: 100%; min-height: 52px; border: 0; border-radius: 14px;
+           background: #007aff; color: #fff; margin-top: 8px; }
+  .n { font-size: 14px; color: #666; margin: 2px 0 0; } @media (prefers-color-scheme: dark){ .n{color:#aaa;} }
+  #out { white-space: pre-wrap; font-size: 14px; background: rgba(120,120,128,.16); padding: 12px; border-radius: 12px; margin-top: 16px; min-height: 60px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>사진 선택기 시험</h1>
+  <p>버튼을 하나씩 눌러, <b>어느 것이 폰 사진첩(갤러리)을 띄우는지</b> 보세요. 고른 뒤 아래에 결과가 뜹니다.</p>
+
+  <div class="card">
+    <b>① image/* (지금 앱 방식)</b>
+    <p class="n">accept="image/*"</p>
+    <input type="file" id="i1" accept="image/*" hidden>
+    <button data-for="i1">① 눌러보기</button>
+  </div>
+
+  <div class="card">
+    <b>② 확장자 없이 전부</b>
+    <p class="n">accept 없음 — 모든 파일 선택기</p>
+    <input type="file" id="i2" hidden>
+    <button data-for="i2">② 눌러보기</button>
+  </div>
+
+  <div class="card">
+    <b>③ image/*,video/* 함께</b>
+    <p class="n">accept="image/*,video/*"</p>
+    <input type="file" id="i3" accept="image/*,video/*" hidden>
+    <button data-for="i3">③ 눌러보기</button>
+  </div>
+
+  <div class="card">
+    <b>④ HEIC 정확 지정</b>
+    <p class="n">accept="image/heic,image/heif,image/*"</p>
+    <input type="file" id="i4" accept="image/heic,image/heif,image/*" hidden>
+    <button data-for="i4">④ 눌러보기</button>
+  </div>
+
+  <div id="out">여기에 고른 파일 정보가 뜹니다.</div>
+</div>
+
+<script>
+const out = document.getElementById('out');
+document.querySelectorAll('button[data-for]').forEach((b) => {
+  const inp = document.getElementById(b.dataset.for);
+  b.onclick = () => inp.click();
+  inp.onchange = () => {
+    const f = inp.files[0];
+    out.textContent = f
+      ? `고른 방식: ${b.textContent}\n파일명: ${f.name || '(없음)'}\n타입(MIME): ${f.type || '(없음)'}\n크기: ${(f.size/1024/1024).toFixed(2)} MB`
+      : '(취소됨)';
+    inp.value = '';
+  };
+});
+</script>
+</body>
+</html>
