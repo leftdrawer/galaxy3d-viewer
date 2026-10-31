@@ -3,69 +3,87 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>사진 선택기 시험</title>
+<title>사진 고르기 방식 정하기</title>
 <style>
-  body { margin: 0; background: #f2f2f7; color: #000; font: 17px/1.4 system-ui, "Apple SD Gothic Neo", sans-serif; }
-  @media (prefers-color-scheme: dark) { body { background: #000; color: #fff; } .card { background: #1c1c1e; } }
+  body { margin: 0; background: #f2f2f7; color: #000; font: 17px/1.45 system-ui, "Apple SD Gothic Neo", sans-serif; }
+  @media (prefers-color-scheme: dark) { body { background: #000; color: #fff; } .card { background: #1c1c1e; } #out{background:#1c1c1e;} }
   .wrap { max-width: 560px; margin: 0 auto; padding: 20px; }
-  h1 { font-size: 22px; }
-  p { color: #666; } @media (prefers-color-scheme: dark){ p{color:#aaa;} }
+  h1 { font-size: 22px; margin-bottom: 4px; }
+  .lead { color: #666; margin-top: 0; } @media (prefers-color-scheme: dark){ .lead,.n{color:#aaa;} }
   .card { background: #fff; border-radius: 20px; padding: 16px; margin: 12px 0; }
-  button { font: inherit; font-weight: 600; width: 100%; min-height: 52px; border: 0; border-radius: 14px;
-           background: #007aff; color: #fff; margin-top: 8px; }
-  .n { font-size: 14px; color: #666; margin: 2px 0 0; } @media (prefers-color-scheme: dark){ .n{color:#aaa;} }
-  #out { white-space: pre-wrap; font-size: 14px; background: rgba(120,120,128,.16); padding: 12px; border-radius: 12px; margin-top: 16px; min-height: 60px; }
+  .card b { font-size: 18px; }
+  .n { font-size: 14px; color: #666; margin: 2px 0 10px; }
+  .btns { display: flex; gap: 8px; }
+  button { font: inherit; font-weight: 600; flex: 1; min-height: 52px; border: 0; border-radius: 14px; }
+  .try { background: rgba(120,120,128,.2); color: inherit; }
+  .use { background: #007aff; color: #fff; }
+  .use.on { background: #34c759; }
+  #out { font-size: 15px; background: rgba(120,120,128,.16); padding: 14px; border-radius: 14px; margin: 16px 0; min-height: 44px; }
+  .done { background: #34c759; color: #fff; border-radius: 20px; padding: 16px; margin-top: 16px; display: none; }
+  .done a { color: #fff; font-weight: 700; }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>사진 선택기 시험</h1>
-  <p>버튼을 하나씩 눌러, <b>어느 것이 폰 사진첩(갤러리)을 띄우는지</b> 보세요. 고른 뒤 아래에 결과가 뜹니다.</p>
+  <h1>사진 고르기 방식 정하기</h1>
+  <p class="lead">아래 4가지를 <b>“열어보기”</b>로 눌러, 폰 사진첩이 가장 편하게 뜨는 걸 찾으세요.
+     마음에 드는 것의 <b>“이걸로”</b>를 누르면 끝. 뷰어가 그 방식을 기억합니다.</p>
 
-  <div class="card">
-    <b>① image/* (지금 앱 방식)</b>
-    <p class="n">accept="image/*"</p>
-    <input type="file" id="i1" accept="image/*" hidden>
-    <button data-for="i1">① 눌러보기</button>
+  <div id="cards"></div>
+
+  <div id="out">아직 아무것도 안 골랐어요.</div>
+
+  <div class="done" id="done">
+    저장했어요. 이제 뷰어는 이 방식으로 사진첩을 엽니다.<br>
+    <a href="./">→ 뷰어로 가기</a>
   </div>
-
-  <div class="card">
-    <b>② 확장자 없이 전부</b>
-    <p class="n">accept 없음 — 모든 파일 선택기</p>
-    <input type="file" id="i2" hidden>
-    <button data-for="i2">② 눌러보기</button>
-  </div>
-
-  <div class="card">
-    <b>③ image/*,video/* 함께</b>
-    <p class="n">accept="image/*,video/*"</p>
-    <input type="file" id="i3" accept="image/*,video/*" hidden>
-    <button data-for="i3">③ 눌러보기</button>
-  </div>
-
-  <div class="card">
-    <b>④ HEIC 정확 지정</b>
-    <p class="n">accept="image/heic,image/heif,image/*"</p>
-    <input type="file" id="i4" accept="image/heic,image/heif,image/*" hidden>
-    <button data-for="i4">④ 눌러보기</button>
-  </div>
-
-  <div id="out">여기에 고른 파일 정보가 뜹니다.</div>
 </div>
 
 <script>
+const METHODS = [
+  { key: 'image',      label: '① 사진만',          accept: 'image/*',                       desc: '보통 이게 사진첩을 띄웁니다' },
+  { key: 'any',        label: '② 전부(제한 없음)', accept: '',                              desc: '모든 파일 선택기' },
+  { key: 'imagevideo', label: '③ 사진+영상',       accept: 'image/*,video/*',               desc: '사진·동영상 함께' },
+  { key: 'heic',       label: '④ HEIC 콕 집어',    accept: 'image/heic,image/heif,image/*', desc: 'HEIC를 명시' },
+];
+const cards = document.getElementById('cards');
 const out = document.getElementById('out');
-document.querySelectorAll('button[data-for]').forEach((b) => {
-  const inp = document.getElementById(b.dataset.for);
-  b.onclick = () => inp.click();
+const done = document.getElementById('done');
+
+METHODS.forEach((m) => {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = `<b>${m.label}</b><p class="n">${m.desc} · accept="${m.accept || '없음'}"</p>`;
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.hidden = true; if (m.accept) inp.accept = m.accept;
+  const btns = document.createElement('div'); btns.className = 'btns';
+  const tryB = document.createElement('button'); tryB.className = 'try'; tryB.textContent = '열어보기';
+  const useB = document.createElement('button'); useB.className = 'use'; useB.textContent = '이걸로';
+  tryB.onclick = () => inp.click();
   inp.onchange = () => {
     const f = inp.files[0];
     out.textContent = f
-      ? `고른 방식: ${b.textContent}\n파일명: ${f.name || '(없음)'}\n타입(MIME): ${f.type || '(없음)'}\n크기: ${(f.size/1024/1024).toFixed(2)} MB`
-      : '(취소됨)';
+      ? `${m.label} 로 고름\n파일명: ${f.name || '(이름 없음)'}\n타입: ${f.type || '(타입 정보 없음)'}\n크기: ${(f.size/1048576).toFixed(2)} MB`
+      : `${m.label}: 취소함`;
     inp.value = '';
   };
+  useB.onclick = () => {
+    try { localStorage.setItem('g3d-pick-accept', m.accept); } catch {}
+    document.querySelectorAll('.use').forEach((b) => b.classList.remove('on'));
+    useB.classList.add('on');
+    done.style.display = 'block';
+    out.textContent = `저장한 방식: ${m.label} (accept="${m.accept || '없음'}")`;
+  };
+  btns.append(tryB, useB);
+  card.append(inp, btns);
+  cards.append(card);
 });
+
+// 이미 저장돼 있으면 표시
+try {
+  const saved = localStorage.getItem('g3d-pick-accept');
+  if (saved !== null) out.textContent = `지금 저장된 방식: accept="${saved || '없음'}"`;
+} catch {}
 </script>
 </body>
 </html>

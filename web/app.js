@@ -24,6 +24,11 @@ const worker = new Worker('worker.js', { type: 'module' });
 
 // ---------- 파일 받기 ----------
 // 사진·영상 고르기 버튼: 각자 전용 입력을 열어 안드로이드가 사진첩/동영상 선택기를 띄우게 한다.
+// picker-test.html에서 고른 accept 방식이 저장돼 있으면 사진 입력에 그대로 쓴다(기기마다 사진첩이 다르게 뜨므로).
+try {
+  const pick = localStorage.getItem('g3d-pick-accept');
+  if (pick !== null) { if (pick) $('filePhoto').accept = pick; else $('filePhoto').removeAttribute('accept'); }
+} catch {}
 for (const [btn, inp] of [['pickPhoto', 'filePhoto'], ['pickVideo', 'fileVideo']])
   $(btn).addEventListener('click', () => $(inp).click());
 for (const id of ['file', 'filePhoto', 'fileVideo'])
