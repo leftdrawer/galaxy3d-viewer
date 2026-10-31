@@ -44,9 +44,24 @@
   #home { max-width: 560px; margin: 0 auto; padding: max(56px, env(safe-area-inset-top)) 20px 40px; }
   h1 { font-size: 34px; line-height: 41px; font-weight: 700; margin: 0 0 8px; letter-spacing: .4px; }
   .sub { color: var(--dim); margin: 0 0 28px; line-height: 22px; }
+  /* 사진·영상 고르기 큰 버튼 (폰에서 사진첩을 바로 띄우는 기본 경로) */
+  .picks { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .pick {
+    flex-direction: column; gap: 6px; align-items: center; justify-content: center; text-align: center;
+    min-height: 132px; padding: 20px 14px; background: var(--card); color: var(--text);
+    border-radius: 26px; height: auto;
+    box-shadow: inset 0 0 0 1.5px transparent; transition: box-shadow .2s, transform .2s cubic-bezier(.3, 1, .4, 1);
+  }
+  .pick:hover { box-shadow: inset 0 0 0 1.5px var(--tint); }
+  .pick:active { transform: scale(.98); }
+  .pick .ic { font-size: 34px; line-height: 1; }
+  .pick strong { font-size: 17px; font-weight: 600; color: var(--text); }
+  .pick span { color: var(--dim); font-size: 13px; line-height: 17px; font-weight: 400; }
+  @media (max-width: 380px) { .picks { grid-template-columns: 1fr; } }
+
   .drop {
     display: flex; flex-direction: column; gap: 8px; align-items: center; justify-content: center; text-align: center;
-    min-height: 220px; padding: 24px; background: var(--card); border-radius: 26px; cursor: pointer;
+    min-height: 120px; padding: 24px; background: var(--card); border-radius: 26px; cursor: pointer;
     box-shadow: inset 0 0 0 1.5px transparent; transition: box-shadow .2s, transform .2s cubic-bezier(.3, 1, .4, 1);
   }
   .drop:hover, .drop.over { box-shadow: inset 0 0 0 1.5px var(--tint); }
@@ -118,12 +133,28 @@
 <main id="home">
   <h1>갤럭시 3D 뷰어</h1>
   <p class="sub">3D 사진·영상을 매직아이(평행법·교차법)로 봅니다.</p>
+  <!-- 사진·영상을 나눠 두면 안드로이드가 사진첩(갤러리)·동영상 선택기를 띄운다. 끌어다 놓기는 drop 영역이 받는다. -->
+  <input type="file" id="filePhoto" accept="image/*,.heic,.heif" hidden>
+  <input type="file" id="fileVideo" accept="video/*,.mp4,.mov" hidden>
+  <input type="file" id="file" hidden>
+  <div class="picks">
+    <button type="button" id="pickPhoto" class="pick">
+      <span class="ic">🖼️</span>
+      <strong>사진 고르기</strong>
+      <span>3D 사진(HEIC) · SBS 사진</span>
+    </button>
+    <button type="button" id="pickVideo" class="pick">
+      <span class="ic">🎬</span>
+      <strong>영상 고르기</strong>
+      <span>3D 영상(MP4) · SBS 영상</span>
+    </button>
+  </div>
   <label id="drop" class="drop">
-    <input type="file" id="file" accept=".heic,.heif,.mp4,.mov,.jpg,.jpeg,.png,.webp" hidden>
-    <strong>파일을 끌어다 놓거나 눌러서 고르세요</strong>
+    <strong>또는 여기에 끌어다 놓기</strong>
     <span>갤럭시 3D 원본(HEIC·MP4) 또는 좌우가 나란한 SBS 파일</span>
   </label>
-  <p class="note">파일은 이 기기 안에서만 처리되고 어디로도 올라가지 않습니다.</p>
+  <p class="note">폰 사진첩에서 바로 고르면 됩니다. 파일은 이 기기 안에서만 처리되고 어디로도 올라가지 않습니다.<br>
+    3D로 찍은 사진·영상만 입체로 보입니다. 일반(평면) 파일을 고르면 알려 드립니다.</p>
   <div id="busy" hidden>
     <div class="bar"><i id="barfill"></i></div>
     <p id="busytext"></p>

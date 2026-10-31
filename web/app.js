@@ -23,7 +23,11 @@ const cv = $('cv'), ctx = cv.getContext('2d'), vid = $('vid');
 const worker = new Worker('worker.js', { type: 'module' });
 
 // ---------- 파일 받기 ----------
-$('file').addEventListener('change', (e) => e.target.files[0] && openFile(e.target.files[0]));
+// 사진·영상 고르기 버튼: 각자 전용 입력을 열어 안드로이드가 사진첩/동영상 선택기를 띄우게 한다.
+for (const [btn, inp] of [['pickPhoto', 'filePhoto'], ['pickVideo', 'fileVideo']])
+  $(btn).addEventListener('click', () => $(inp).click());
+for (const id of ['file', 'filePhoto', 'fileVideo'])
+  $(id).addEventListener('change', (e) => { const f = e.target.files[0]; e.target.value = ''; if (f) openFile(f); });
 const drop = $('drop');
 for (const t of ['dragenter', 'dragover']) drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add('over'); });
 for (const t of ['dragleave', 'drop']) drop.addEventListener(t, () => drop.classList.remove('over'));
@@ -35,13 +39,18 @@ let current = null;
 function openFile(file) {
   if (PHONE) landscape(); // 파일을 고른 손짓이 살아 있을 때 들어가야 전체화면이 허용된다
   current = file;
-  baseName = file.name.replace(/\.[^.]+$/, '');
-  const ext = file.name.split('.').pop().toLowerCase();
+  baseName = (file.name || '파일').replace(/\.[^.]+$/, '');
+  const ext = (file.name || '').split('.').pop().toLowerCase();
+  const mime = (file.type || '').toLowerCase();
   showError('');
-  if (ext === 'heic' || ext === 'heif') return work('photo', file);
-  if (ext === 'mp4' || ext === 'mov') return work('video', file);
-  if (file.type.startsWith('image/')) return showSbsImage(file);
-  showError('지원하지 않는 파일입니다. 갤럭시 3D 원본(HEIC·MP4)이나 SBS 사진·영상을 넣어 주세요.');
+  // 사진첩에서 고르면 확장자가 사라지고 MIME만 남는 경우가 있어 둘 다 본다.
+  if (ext === 'heic' || ext === 'heif' || mime === 'image/heic' || mime === 'image/heif')
+    return work('photo', file);
+  if (ext === 'mp4' || ext === 'mov' || mime.startsWith('video/'))
+    return work('video', file);
+  if (mime.startsWith('image/') || /\.(jpe?g|png|webp)$/.test('.' + ext))
+    return showSbsImage(file);
+  showError('지원하지 않는 파일입니다. 갤럭시 3D 원본(HEIC·MP4)이나 좌우가 나란한 SBS 사진·영상을 골라 주세요.');
 }
 
 function work(kind, file) {
@@ -99,7 +108,14 @@ function showError(text) {
 }
 
 async function showSbsImage(file) {
-  const bm = await createImageBitmap(file);
+  let bm;
+  try { bm = await createImageBitmap(file); }
+  catch { return showError('사진을 열지 못했습니다. 3D 사진(HEIC) 원본이나 좌우가 나란한 SBS 사진을 골라 주세요.'); }
+  // SBS 사진은 좌우 두 장을 이어 붙여 가로:세로가 2:1 이상이다. 일반(평면) 사진은 그렇지 않으니 걸러 안내한다.
+  if (bm.width / bm.height < 1.6) {
+    bm.close?.();
+    return showError('3D(입체) 사진이 아닙니다. 갤럭시로 3D 촬영한 사진(HEIC) 또는 좌우가 나란한 SBS 사진만 입체로 보입니다. 일반 사진은 이 앱에서 볼 수 없어요.');
+  }
   const w = bm.width / 2;
   show({ els: [bm, bm], rects: [[0, 0, w, bm.height], [w, 0, w, bm.height]], w, h: bm.height });
 }
