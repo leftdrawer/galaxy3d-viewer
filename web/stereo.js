@@ -50,7 +50,7 @@ export function estimateDx(gray, stride, w, h, xl, xr, target = 960) {
   return { dx: found[found.length >> 1] * f, n: found.length };
 }
 
-// 여러 표본의 판정. 반환 { swap, warn }. 메타데이터와 시차가 다르면 시차를 따른다 (CLAUDE.md 원칙 5).
+// 여러 표본의 판정. 반환 { swap, warn }. 메타데이터와 시차가 다르면 시차를 따른다 (AGENTS.md 원칙 5).
 export function judge(samples) {
   const good = samples.filter((s) => s.n >= MIN_PATCHES);
   if (!good.length) return { swap: false, warn: '시차로 좌우를 확인하지 못했습니다(장면이 어둡거나 평평함). 메타데이터를 따릅니다.' };

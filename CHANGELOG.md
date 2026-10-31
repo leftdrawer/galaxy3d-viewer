@@ -1,6 +1,14 @@
 # 변경 이력 (CHANGELOG) — galaxy3d-viewer
 
-> 규칙: 상위 `C:\AI Projects\AGENTS.md`. 최신 항목이 위.
+> 규칙: 상위 `C:\AI Projects\AGENTS.md`. 최신 항목이 위. 작업 규칙은 `AGENTS.md`.
+
+## 2026-10-31 — 규칙 파일을 AGENTS.md로
+
+- 무엇: `CLAUDE.md`의 작업 규칙을 글자 그대로 `AGENTS.md`로 옮기고 `CLAUDE.md`는 `@AGENTS.md` 한 줄로. `web/stereo.js` 주석의 "CLAUDE.md 원칙 5"를 "AGENTS.md 원칙 5"로. 코드 동작은 그대로.
+- 왜: 상위 규칙(규칙은 AGENTS.md에 두고 CLAUDE.md는 불러오기만)과 전체 진단(`C:\AI Projects\CHANGELOG.md` 같은 날 항목). Claude Code만 읽던 규칙을 Kiro·Codex도 읽게. 사용자 지시 "응"(규칙 파일 정리).
+- 동기화: 시작 전 `git pull --ff-only`(이미 최신), 이 세 파일과 함께 커밋·푸시. 커밋 안 된 `web/anaglyph-test.html`(10-31 21:06, 다른 작업의 것)은 그대로 둠.
+- 기록 보충: 10-24의 커밋 세 개(적청 안경 모드 추가 `5551c1f`, 앱 아이콘 교체 `42e4bb3`·`518cca4`)는 이 파일을 만들기(10-27) 전 것이라 여기 없다.
+- 작업자: Kiro / Claude Opus 5.5
 
 ## 2026-10-27 — 웹 뷰어 화면을 Apple HIG 기준으로 다듬음
 
