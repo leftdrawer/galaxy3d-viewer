@@ -2,6 +2,13 @@
 
 > 규칙: 상위 `C:\AI Projects\AGENTS.md`. 최신 항목이 위. 작업 규칙은 `AGENTS.md`.
 
+## 2026-11-01 — 의존성 버전을 고정하고 배포 전에 pytest를 돌림
+
+- 무엇: `core/requirements.txt`의 numpy·opencv-python·pillow·pillow-heif·pytest를 코드가 부르는 API의 하한으로 고정했다(ster 그룹은 pillow-heif 1.8.0, EXIF는 Pillow 11.1.0, Python 3.12 휠 기준 numpy 1.26.4와 OpenCV 4.10). GitHub Pages 워크플로는 배포 전에 `pytest`와 `web/stereo.test.mjs`를 돌리고, 실패하면 wasm 빌드와 배포로 가지 않는다. 같은 검사는 풀 리퀘스트에서도 돈다. 샘플이 없어도 좌우 판정, 잘못된 입력 거부, FFmpeg 7.1·MV-HEVC 확인, CLI 집계를 검사하는 테스트를 더했다. 변환 동작은 바꾸지 않았다.
+- 왜: 버전이 풀려 있으면 설치할 때마다 라이브러리가 달라지고, 테스트가 깨져도 Pages에 올라갔다. 사용자 지시(기본기만 보강, 동작은 유지).
+- 동기화: 시작 전 `main`은 `origin/main`과 같았다. 이 변경만 커밋·푸시.
+- 작업자: Cursor Cloud Agent / Grok 4.7
+
 ## 2026-11-01 — 적청 안경 깊이 점검 페이지를 git에 넣음
 
 - 무엇: 커밋되지 않고 남아 있던 `web/anaglyph-test.html`을 커밋했다. 빨강-청록(적청) 안경으로 보는 깊이 진단용 한 페이지 시험 도구다. 시차(두 눈 어긋남)를 0~80px 슬라이더로 바꿔 보며 오브젝트가 배경보다 앞으로 떠 보이는지, 좌우 번갈아 보기로 정렬을 확인한다. 10-24 '적청 안경 모드 추가'(`5551c1f`) 작업과 이어지는 수동 점검 페이지다. 다른 코드는 바꾸지 않았다.
