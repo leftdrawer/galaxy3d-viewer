@@ -1,5 +1,6 @@
-numpy
-opencv-python
-pillow
-pillow-heif
-pytest
+# Python 3.12. 버전은 이 코드가 부르는 API의 하한이다.
+numpy==1.26.4
+opencv-python==4.10.0.84
+pillow==11.1.0
+pillow-heif==1.8.0
+pytest==8.0.0
