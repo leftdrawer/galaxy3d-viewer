@@ -2,6 +2,16 @@
 
 > 규칙: 상위 `C:\AI Projects\AGENTS.md`. 최신 항목이 위. 작업 규칙은 `AGENTS.md`.
 
+## 2026-11-02 — 빠진 기록 보충 (audit_projects.py 점검)
+
+- 기록 보충: 마지막 기록 뒤 커밋 4개가 CHANGELOG에 없어 커밋 기록으로만 적는다(코드는 열지 않음).
+  - 2c89354 11-01 03:04 사진/영상 선택 버튼 분리
+  - f21045a 11-01 04:02 사진 선택기 방식 비교용 임시 시험 페이지
+  - 30442a0 11-01 04:07 폰에서 사진 고르기 방식을 직접 골라 저장
+  - 247347a 11-01 16:52 사진 선택기 accept 고정(image/*+HEIC), 임시 시험 페이지 제거, sw v10
+- 확인 못 한 것: 누가 작업했는지는 기록 없음.
+- 작업자: Grok Bot (은호당님 승인 'A와 C부터', 점검 Page 자동 적용 항목)
+
 ## 2026-11-01 — 의존성 버전을 고정하고 배포 전에 pytest를 돌림
 
 - 무엇: `core/requirements.txt`의 numpy·opencv-python·pillow·pillow-heif·pytest를 코드가 부르는 API의 하한으로 고정했다(ster 그룹은 pillow-heif 1.8.0, EXIF는 Pillow 11.1.0, Python 3.12 휠 기준 numpy 1.26.4와 OpenCV 4.10). GitHub Pages 워크플로는 배포 전에 `pytest`와 `web/stereo.test.mjs`를 돌리고, 실패하면 wasm 빌드와 배포로 가지 않는다. 같은 검사는 풀 리퀘스트에서도 돈다. 샘플이 없어도 좌우 판정, 잘못된 입력 거부, FFmpeg 7.1·MV-HEVC 확인, CLI 집계를 검사하는 테스트를 더했다. 변환 동작은 바꾸지 않았다.
