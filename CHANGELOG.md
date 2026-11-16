@@ -2,6 +2,14 @@
 
 > 규칙: 상위 `C:\AI Projects\AGENTS.md`. 최신 항목이 위. 작업 규칙은 `AGENTS.md`.
 
+## 2026-11-17 — Astryx Neutral 뷰어 화면 적용
+
+- Astryx Neutral 0.7.16과 MIT 라이선스를 `web/vendor/`에 고정 포함하고 정적 뷰어 UI를 토큰 기반으로 정리했다. 기존 DOM ID·파일 입력·검정 감상 무대·기기 내 처리 동작을 유지했고 `web/app.js`는 수정하지 않았다. 서비스 워커를 `g3d-v11`로 올리고 테마 CSS를 오프라인 셸에 추가했다.
+- 검증: `node web/stereo.test.mjs`, `node --check web/app.js`, `node --check web/sw.js`, 최종 `git diff --check` 통과. Impeccable 검출 결과 없음. 정적 검토로 380px 단일 열, 44px 조작 영역, 포커스 및 동작 줄이기 규칙을 확인했으나 브라우저 시각 검증은 로컬 브라우저 도구 시작 실패로 미완료. 샘플 파일은 열지 않았다.
+- 동기화: 로컬 커밋만 진행하며 푸시·배포하지 않음.
+- 관련 파일: `web/index.html`, `web/sw.js`, `DESIGN.md`, `web/vendor/astryx-theme-neutral-0.7.16.css`, `web/vendor/astryx-theme-neutral-LICENSE.txt`.
+- 작업자: Cue.
+
 ## 2026-11-02 — 빠진 기록 보충 (audit_projects.py 점검)
 
 - 기록 보충: 마지막 기록 뒤 커밋 4개가 CHANGELOG에 없어 커밋 기록으로만 적는다(코드는 열지 않음).

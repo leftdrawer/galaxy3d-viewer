@@ -1,132 +1,143 @@
 <!doctype html>
-<html lang="ko">
+<html lang="ko" data-astryx-theme="neutral">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>갤럭시 3D 뷰어</title>
 <meta name="description" content="갤럭시 3D 사진·영상을 매직아이(평행법·교차법)로 보는 뷰어. 파일은 기기 밖으로 나가지 않습니다.">
-<meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f1f1f1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1b1b1b" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="vendor/astryx-theme-neutral-0.7.16.css">
 <style>
-  /* Apple HIG 기반: 시스템 의미 색, 강조색 하나(tint), 텍스트 스타일 단계, 조작 층에만 유리 재질 */
   :root {
-    --bg: #f2f2f7; --card: #fff; --panel: rgba(255, 255, 255, .72);
-    --text: #000; --dim: rgba(60, 60, 67, .6); --line: rgba(60, 60, 67, .29);
-    --fill: rgba(120, 120, 128, .16); --tint: #007aff; --err: #ff3b30;
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", system-ui, sans-serif;
+    --bg: var(--color-background-body);
+    --card: var(--color-background-card);
+    --text: var(--color-text-primary);
+    --dim: var(--color-text-secondary);
+    --fill: var(--color-background-muted);
+    --tint: var(--color-accent);
+    --err: var(--color-text-error);
+    --view-bg: #000;
+    --view-ink: var(--color-on-dark);
+    --view-dim: color-mix(in srgb, var(--view-ink) 68%, transparent);
+    --view-border: color-mix(in srgb, var(--view-ink) 18%, transparent);
+    --view-solid: color-mix(in srgb, var(--view-ink) 16%, var(--view-bg));
+    --font-family-body: Figtree, "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
+    --font-family-heading: Figtree, "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
     color-scheme: light dark;
+    font-family: var(--font-family-body);
     -webkit-text-size-adjust: 100%;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #000; --card: #1c1c1e; --panel: rgba(44, 44, 46, .72);
-      --text: #fff; --dim: rgba(235, 235, 245, .6); --line: rgba(84, 84, 88, .65);
-      --fill: rgba(120, 120, 128, .36); --tint: #0a84ff; --err: #ff453a;
-    }
+    accent-color: var(--color-info);
+    scrollbar-color: var(--color-border-emphasized) var(--bg);
   }
   * { box-sizing: border-box; }
-  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font-size: 17px; line-height: 1.3; word-break: keep-all; }
-  :focus-visible { outline: 3px solid var(--tint); outline-offset: 2px; }
+  html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); font-size: var(--text-large-size); line-height: var(--text-large-leading); word-break: keep-all; }
+  :focus-visible { outline: 3px solid var(--color-info); outline-offset: 3px; }
   [hidden] { display: none !important; }
+  ::selection { background: var(--color-accent-muted); color: var(--text); }
 
   button, a.btn {
-    font: inherit; font-size: 17px; font-weight: 500; color: var(--tint); background: var(--fill); border: 0;
-    border-radius: 999px; min-height: 44px; padding: 0 18px; cursor: pointer; text-decoration: none; white-space: nowrap;
-    display: inline-flex; align-items: center; justify-content: center;
-    transition: transform .2s cubic-bezier(.3, 1, .4, 1), background .2s;
+    font: inherit; font-size: var(--text-large-size); font-weight: var(--text-large-weight);
+    color: var(--color-text-accent); background: var(--color-accent-muted); border: 1px solid transparent;
+    border-radius: var(--radius-full); min-height: 44px; padding: 0 16px; cursor: pointer; text-decoration: none; white-space: nowrap;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    transition: transform var(--duration-fast) cubic-bezier(.3, 1, .4, 1), background-color var(--duration-fast), border-color var(--duration-fast);
   }
-  button:active, a.btn:active { transform: scale(.97); }
-  button.on { background: var(--tint); color: #fff; }
+  button:disabled, a.btn[aria-disabled="true"] { cursor: default; opacity: .55; }
+  button:active:not(:disabled), a.btn:active { transform: scale(.98); }
+  button.on { background: var(--color-accent); color: var(--color-on-accent); }
 
-  #home { max-width: 560px; margin: 0 auto; padding: max(56px, env(safe-area-inset-top)) 20px 40px; }
-  h1 { font-size: 34px; line-height: 41px; font-weight: 700; margin: 0 0 8px; letter-spacing: .4px; }
-  .sub { color: var(--dim); margin: 0 0 28px; line-height: 22px; }
-  /* 사진·영상 고르기 큰 버튼 (폰에서 사진첩을 바로 띄우는 기본 경로) */
+  #home { width: 100%; max-width: 680px; margin: 0 auto; padding: clamp(40px, 7dvh, 72px) 20px calc(40px + env(safe-area-inset-bottom)); }
+  h1 { font-family: var(--font-family-heading); font-size: var(--text-display-2-size); line-height: var(--text-display-2-leading); font-weight: var(--text-heading-1-weight); margin: 0 0 10px; letter-spacing: -.03em; }
+  .sub { color: var(--dim); margin: 0 0 28px; font-size: var(--text-large-size); line-height: 1.55; }
   .picks { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
   .pick {
-    flex-direction: column; gap: 6px; align-items: center; justify-content: center; text-align: center;
-    min-height: 132px; padding: 20px 14px; background: var(--card); color: var(--text);
-    border-radius: 26px; height: auto;
-    box-shadow: inset 0 0 0 1.5px transparent; transition: box-shadow .2s, transform .2s cubic-bezier(.3, 1, .4, 1);
+    flex-direction: column; gap: 8px; align-items: center; justify-content: center; text-align: center;
+    min-height: 132px; height: auto; padding: 18px 14px; background: var(--color-background-surface); color: var(--text);
+    border: 1px solid var(--color-border); border-radius: var(--radius-container);
   }
-  .pick:hover { box-shadow: inset 0 0 0 1.5px var(--tint); }
-  .pick:active { transform: scale(.98); }
-  .pick .ic { font-size: 34px; line-height: 1; }
-  .pick strong { font-size: 17px; font-weight: 600; color: var(--text); }
-  .pick span { color: var(--dim); font-size: 13px; line-height: 17px; font-weight: 400; }
+  .pick:hover:not(:disabled) { border-color: var(--color-border-emphasized); background: color-mix(in srgb, var(--color-accent-muted) 55%, var(--card)); }
+  .pick .ic { width: 40px; height: 40px; display: grid; place-items: center; border-radius: var(--radius-element); background: var(--color-accent-muted); color: var(--color-text-accent); }
+  .pick .ic svg { display: block; width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .pick strong { font-size: var(--text-large-size); font-weight: var(--text-large-weight); color: var(--text); }
+  .pick span:not(.ic) { color: var(--dim); font-size: var(--text-supporting-size); line-height: 1.45; font-weight: var(--text-supporting-weight); }
   @media (max-width: 380px) { .picks { grid-template-columns: 1fr; } }
 
   .drop {
     display: flex; flex-direction: column; gap: 8px; align-items: center; justify-content: center; text-align: center;
-    min-height: 120px; padding: 24px; background: var(--card); border-radius: 26px; cursor: pointer;
-    box-shadow: inset 0 0 0 1.5px transparent; transition: box-shadow .2s, transform .2s cubic-bezier(.3, 1, .4, 1);
+    min-height: 120px; padding: 24px; background: var(--fill); color: var(--text); border: 1px dashed var(--color-border-emphasized);
+    border-radius: var(--radius-container); cursor: copy; transition: background-color var(--duration-fast), border-color var(--duration-fast);
   }
-  .drop:hover, .drop.over { box-shadow: inset 0 0 0 1.5px var(--tint); }
-  .drop:active { transform: scale(.98); }
-  .drop strong { font-size: 20px; line-height: 25px; font-weight: 600; }
-  .drop span { color: var(--dim); font-size: 15px; line-height: 20px; }
-  .note { color: var(--dim); font-size: 13px; line-height: 18px; margin-top: 14px; padding: 0 16px; }
+  .drop.over { border-style: solid; border-color: var(--color-info); background: var(--color-info-muted); }
+  .drop strong { font-size: var(--text-heading-2-size); line-height: 1.35; font-weight: var(--text-heading-2-weight); }
+  .drop span { color: var(--dim); font-size: var(--text-supporting-size); line-height: 1.5; }
+  .note { color: var(--dim); font-size: var(--text-supporting-size); line-height: 1.6; margin: 14px 0 0; }
   #busy { margin-top: 24px; }
-  .bar { height: 6px; background: var(--fill); border-radius: 3px; overflow: hidden; }
-  .bar i { display: block; height: 100%; width: 0; background: var(--tint); transition: width .2s; }
-  #busytext { color: var(--dim); font-size: 15px; font-variant-numeric: tabular-nums; }
-  .err { color: var(--err); margin-top: 18px; line-height: 22px; }
-  details { margin-top: 32px; background: var(--card); border-radius: 26px; padding: 14px 20px; color: var(--dim); font-size: 15px; line-height: 22px; }
-  summary { cursor: pointer; color: var(--text); font-weight: 600; min-height: 24px; }
+  .bar { height: 6px; background: var(--fill); border-radius: var(--radius-full); overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--color-info); transition: width var(--duration-fast); }
+  #busytext { color: var(--dim); font-size: var(--text-supporting-size); font-variant-numeric: tabular-nums; }
+  .err { color: var(--err); margin-top: 18px; line-height: 1.5; }
+  details { margin-top: 30px; border-top: 1px solid var(--color-border); padding-top: 14px; color: var(--dim); font-size: var(--text-body-size); line-height: 1.65; }
+  summary { cursor: pointer; color: var(--text); font-weight: var(--text-large-weight); min-height: 44px; display: flex; align-items: center; }
 
-  #view { position: fixed; inset: 0; background: #000; color: #fff; --dim: rgba(235, 235, 245, .6); --tint: #0a84ff; }
-  /* 폰이 세로인데 가로 고정이 안 된 경우: 보기 화면을 90° 돌려 무조건 가로로 보이게 한다 */
+  #view { position: fixed; inset: 0; background: var(--view-bg); color: var(--view-ink); color-scheme: dark; --dim: var(--view-dim); --tint: var(--color-info); }
   @media (orientation: portrait) and (pointer: coarse) {
-    #view { inset: auto; top: 0; left: 0; width: 100vh; height: 100vw; width: 100dvh;
-            transform-origin: top left; transform: translateX(100vw) rotate(90deg); }
+    #view { inset: auto; top: 0; left: 0; width: 100svh; height: 100svw; width: 100dvh; height: 100dvw; transform-origin: top left; transform: translateX(100dvw) rotate(90deg); }
   }
   #cv { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: manipulation; }
-  #ui { position: absolute; inset: 0; pointer-events: none; transition: opacity .25s; }
+  #ui { position: absolute; inset: 0; pointer-events: none; transition: opacity var(--duration-fast); }
   #ui.hide { opacity: 0; }
   #ui.hide * { pointer-events: none !important; }
-  .row { position: absolute; left: 0; right: 0; display: flex; gap: 8px; align-items: center; padding: 12px 16px;
-         padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+  .row { position: absolute; left: 0; right: 0; display: flex; gap: 8px; align-items: center; padding: 12px 16px; padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
   .row > * { pointer-events: auto; }
   .row.top { top: 0; }
   .row.bottom { bottom: 0; padding-bottom: max(12px, env(safe-area-inset-bottom)); flex-wrap: wrap; }
-  /* 조작 층(위·아래 막대, 패널, 보기 화면 안 버튼)만 유리 재질 */
   #view button, #view a.btn {
-    color: #fff; background: rgba(60, 60, 67, .55);
-    -webkit-backdrop-filter: blur(30px) saturate(140%); backdrop-filter: blur(30px) saturate(140%);
+    color: var(--view-ink); background: color-mix(in srgb, var(--view-ink) 14%, transparent); border: 1px solid var(--view-border);
+    -webkit-backdrop-filter: blur(24px) saturate(140%); backdrop-filter: blur(24px) saturate(140%);
   }
-  #view button.on { background: var(--tint); }
-  #msg { color: #fff; font-size: 13px; line-height: 18px; text-shadow: 0 1px 3px rgba(0, 0, 0, .8); pointer-events: none; }
-  #seek { flex: 1; min-width: 120px; accent-color: var(--tint); }
+  #view button.on { background: var(--color-info); color: var(--color-on-info); border-color: transparent; }
+  .back-icon { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  #msg { color: var(--view-ink); font-size: var(--text-supporting-size); line-height: 1.4; text-shadow: 0 1px 3px color-mix(in srgb, var(--view-bg) 84%, transparent); pointer-events: none; }
+  #seek { flex: 1; min-width: 120px; min-height: 44px; accent-color: var(--color-info); }
   .spacer { flex: 1; }
   #panel {
     position: absolute; right: max(16px, env(safe-area-inset-right)); bottom: 76px; width: min(340px, calc(100% - 32px)); max-height: calc(100% - 140px);
-    overflow: auto; pointer-events: auto; background: rgba(44, 44, 46, .72);
-    -webkit-backdrop-filter: blur(30px) saturate(140%); backdrop-filter: blur(30px) saturate(140%);
-    border-radius: 26px; padding: 16px 20px;
+    overflow: auto; pointer-events: auto; background: color-mix(in srgb, var(--view-ink) 14%, var(--view-bg)); color: var(--view-ink);
+    border: 1px solid var(--view-border); border-radius: var(--radius-container); padding: 16px 18px;
+    -webkit-backdrop-filter: blur(24px) saturate(140%); backdrop-filter: blur(24px) saturate(140%);
   }
-  #panel label { display: block; font-size: 15px; line-height: 20px; margin: 12px 0 4px; }
-  #panel label b { float: right; font-weight: 600; color: var(--tint); font-variant-numeric: tabular-nums; }
-  #panel input[type=range] { width: 100%; min-height: 28px; accent-color: var(--tint); }
-  #panel .hint { color: var(--dim); font-size: 13px; line-height: 18px; margin: 2px 0 0; }
+  #panel label { display: block; font-size: var(--text-label-size); line-height: 1.4; margin: 12px 0 4px; }
+  #panel label b { float: right; font-weight: var(--text-label-weight); color: var(--color-info); font-variant-numeric: tabular-nums; }
+  #panel input[type=range] { width: 100%; min-height: 44px; accent-color: var(--color-info); }
+  #panel .hint { color: var(--view-dim); font-size: var(--text-supporting-size); line-height: 1.5; margin: 2px 0 0; }
   #panel .btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 
-  dialog { background: var(--card); color: var(--text); border: 0; border-radius: 34px; padding: 24px; max-width: min(560px, 94vw); }
-  dialog::backdrop { background: rgba(0, 0, 0, .4); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
-  dialog h2 { margin: 0 0 8px; font-size: 22px; line-height: 28px; font-weight: 700; }
-  dialog p { color: var(--dim); margin: 0 0 16px; font-size: 15px; line-height: 20px; }
-  #card { border: 2px solid var(--tint); border-radius: 12px; margin: 0 auto 16px; background: color-mix(in srgb, var(--tint) 10%, transparent); }
-  #calScale { width: 100%; accent-color: var(--tint); }
+  dialog { background: var(--card); color: var(--text); border: 1px solid var(--color-border); border-radius: var(--radius-container); padding: 24px; max-width: min(560px, calc(100% - 32px)); }
+  dialog::backdrop { background: color-mix(in srgb, var(--color-overlay) 72%, transparent); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+  dialog h2 { margin: 0 0 8px; font-size: var(--text-heading-2-size); line-height: 1.35; font-weight: var(--text-heading-2-weight); }
+  dialog p { color: var(--dim); margin: 0 0 16px; font-size: var(--text-body-size); line-height: 1.55; }
+  #card { border: 2px solid var(--color-info); border-radius: var(--radius-element); margin: 0 auto 16px; background: var(--color-info-muted); }
+  #calScale { width: 100%; min-height: 44px; accent-color: var(--color-info); }
   dialog .btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
 
-  /* 투명도 줄이기·움직임 줄이기 설정 존중 */
   @media (prefers-reduced-transparency: reduce) {
-    #view button, #view a.btn { background: #3a3a3c; -webkit-backdrop-filter: none; backdrop-filter: none; }
-    #panel { background: #2c2c2e; -webkit-backdrop-filter: none; backdrop-filter: none; }
+    #view button, #view a.btn { background: var(--view-solid); -webkit-backdrop-filter: none; backdrop-filter: none; }
+    #panel { background: var(--view-solid); -webkit-backdrop-filter: none; backdrop-filter: none; }
+    dialog::backdrop { -webkit-backdrop-filter: none; backdrop-filter: none; }
   }
-  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; scroll-behavior: auto !important; }
+    button:active:not(:disabled), a.btn:active { transform: none; }
+  }
+  @media (forced-colors: active) {
+    :focus-visible { outline-color: Highlight; }
+    .pick, .drop, details, dialog { border-color: CanvasText; }
+    button.on, #view button.on { background: Highlight; color: HighlightText; }
+  }
 </style>
 </head>
 <body>
@@ -139,27 +150,27 @@
   <input type="file" id="file" hidden>
   <div class="picks">
     <button type="button" id="pickPhoto" class="pick">
-      <span class="ic">🖼️</span>
+      <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><rect x="3" y="3" width="18" height="18" rx="3"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="m21 15-5-5L5 21"></path></svg></span>
       <strong>사진 고르기</strong>
       <span>3D 사진(HEIC) · SBS 사진</span>
     </button>
     <button type="button" id="pickVideo" class="pick">
-      <span class="ic">🎬</span>
+      <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><rect x="3" y="4" width="18" height="16" rx="3"></rect><path d="m10 9 5 3-5 3z" fill="currentColor" stroke="none"></path></svg></span>
       <strong>영상 고르기</strong>
       <span>3D 영상(MP4) · SBS 영상</span>
     </button>
   </div>
-  <label id="drop" class="drop">
+  <div id="drop" class="drop" role="region" aria-label="파일 끌어다 놓기">
     <strong>또는 여기에 끌어다 놓기</strong>
     <span>갤럭시 3D 원본(HEIC·MP4) 또는 좌우가 나란한 SBS 파일</span>
-  </label>
+  </div>
   <p class="note">폰 사진첩에서 바로 고르면 됩니다. 파일은 이 기기 안에서만 처리되고 어디로도 올라가지 않습니다.<br>
     3D로 찍은 사진·영상만 입체로 보입니다. 일반(평면) 파일을 고르면 알려 드립니다.</p>
-  <div id="busy" hidden>
+  <div id="busy" role="status" aria-live="polite" hidden>
     <div class="bar"><i id="barfill"></i></div>
     <p id="busytext"></p>
   </div>
-  <p id="err" class="err" hidden></p>
+  <p id="err" class="err" role="alert" hidden></p>
   <details>
     <summary>보는 법</summary>
     <p><b>평행법</b>: 화면 너머 먼 곳을 보듯 초점을 풀면 두 그림이 겹쳐 가운데에 입체가 떠오릅니다. 그림 사이 간격이 눈 사이(약 63mm)보다 좁아야 합니다.<br>
@@ -170,32 +181,32 @@
   </details>
 </main>
 
-<section id="view" hidden>
+<section id="view" aria-label="3D 사진·영상 보기" hidden>
   <canvas id="cv"></canvas>
   <video id="vid" playsinline loop hidden></video>
   <div id="ui">
     <div class="row top">
-      <button id="back">← 새 파일</button>
+      <button id="back"><svg class="back-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M19 12H5m7-7-7 7 7 7"></path></svg><span>새 파일</span></button>
       <span id="msg"></span>
     </div>
     <div class="row bottom">
       <button id="mode" title="S 키">평행법</button>
       <button id="play" hidden>일시정지</button>
-      <input id="seek" type="range" min="0" max="1" step="0.01" value="0" hidden>
+      <input id="seek" type="range" min="0" max="1" step="0.01" value="0" aria-label="영상 위치" hidden>
       <span class="spacer"></span>
       <button id="adj">조절</button>
       <a id="save" class="btn" hidden>SBS 저장</a>
       <button id="fs" title="F 키">전체화면</button>
     </div>
-    <div id="panel" hidden>
+    <div id="panel" role="group" aria-label="보기 조절" hidden>
       <div id="sizeCtl">
-        <label>그림 폭 <b id="vWidth"></b></label><input id="sWidth" type="range" min="20" max="250" step="1">
-        <label>그림 중심 간격 <b id="vGap"></b></label><input id="sGap" type="range" min="20" max="300" step="1">
+        <label for="sWidth">그림 폭 <b id="vWidth"></b></label><input id="sWidth" type="range" min="20" max="250" step="1">
+        <label for="sGap">그림 중심 간격 <b id="vGap"></b></label><input id="sGap" type="range" min="20" max="300" step="1">
         <p class="hint" id="gapHint"></p>
       </div>
       <p class="hint" id="anaHint" hidden>빨간 렌즈를 왼쪽 눈에 대세요. 겹친 테두리가 거슬리면 깊이 이동으로 맞추세요.</p>
-      <label>상하 정렬 <b id="vDy"></b></label><input id="sDy" type="range" min="-40" max="40" step="1">
-      <label>깊이(창) 이동 <b id="vShift"></b></label><input id="sShift" type="range" min="-120" max="120" step="2">
+      <label for="sDy">상하 정렬 <b id="vDy"></b></label><input id="sDy" type="range" min="-40" max="40" step="1">
+      <label for="sShift">깊이(창) 이동 <b id="vShift"></b></label><input id="sShift" type="range" min="-120" max="120" step="2">
       <p class="hint">튀어나와 불편하면 + 쪽으로 밀어 화면 뒤로 보내세요.</p>
       <div class="btns">
         <button id="fit">꽉 채우기</button>
@@ -211,7 +222,7 @@
   <h2>크기 보정</h2>
   <p>신용카드(가로 85.6mm)를 화면에 대고, 아래 상자 가로가 카드와 똑같아지도록 막대를 움직이세요. 이 값으로 mm 단위를 계산합니다.</p>
   <div id="card"></div>
-  <input id="calScale" type="range" min="2" max="14" step="0.01">
+  <input id="calScale" type="range" min="2" max="14" step="0.01" aria-label="화면 크기 보정">
   <div class="btns"><button id="calCancel">취소</button><button id="calOk" class="on">완료</button></div>
 </dialog>
 
