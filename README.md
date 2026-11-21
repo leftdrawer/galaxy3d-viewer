@@ -24,4 +24,4 @@ node web/heic.test.mjs       # samples/ 필요
 
 ## 라이선스 참고
 
-FFmpeg(LGPL 2.1+, 이 빌드는 GPL 구성요소 없음), libheif(LGPL 3), mediabunny(MPL 2.0)를 사용한다. 각 라이선스는 `web/vendor/`와 각 프로젝트 저장소에 있다.
+FFmpeg(LGPL 2.1+, 이 빌드는 GPL 구성요소 없음), libheif(LGPL 3), mediabunny(MPL 2.0), Astryx Neutral 0.7.16(MIT), Figtree(SIL OFL)를 사용한다. 각 라이선스는 `web/vendor/`와 각 프로젝트 저장소에 있다.

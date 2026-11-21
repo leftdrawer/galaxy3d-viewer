@@ -78,7 +78,7 @@ worker.onmessage = async ({ data: m }) => {
       download(await c.convertToBlob({ type: 'image/jpeg', quality: 0.95 }), `${baseName}_SBS_LR.jpg`);
     };
   } else if (m.type === 'video') {
-    await showVideo(m.blob, m.swap);
+    if (!await showVideo(m.blob, m.swap)) return;
     $('save').onclick = null;
     $('save').href = objectUrl;
     $('save').download = `${baseName}_SBS_LR.mp4`;
@@ -121,7 +121,7 @@ async function showSbsImage(file) {
 }
 
 async function showSbsVideo(file, fromMp4) {
-  await showVideo(file, false);
+  if (!await showVideo(file, false)) return;
   if (fromMp4 && vid.videoWidth / vid.videoHeight < 2.2) {
     showError('3D 영상이 아닙니다(시점이 하나뿐). 옮기는 중에 3D 정보가 사라졌을 수 있어요. USB 케이블이나 Quick Share로 원본을 다시 옮겨 주세요.');
   }
@@ -131,8 +131,12 @@ async function showVideo(blob, swap) {
   if (objectUrl) URL.revokeObjectURL(objectUrl);
   objectUrl = URL.createObjectURL(blob);
   vid.src = objectUrl;
-  await new Promise((res, rej) => { vid.onloadedmetadata = res; vid.onerror = () => rej(new Error('영상을 재생할 수 없습니다.')); })
-    .catch((e) => showError(e.message));
+  try {
+    await new Promise((res, rej) => { vid.onloadedmetadata = res; vid.onerror = () => rej(new Error('영상을 재생할 수 없습니다.')); });
+  } catch (e) {
+    showError(e.message); // 실패 뒤에 빈 감상 화면을 다시 열지 않는다
+    return false;
+  }
   const w = vid.videoWidth / 2, h = vid.videoHeight;
   const halves = [[0, 0, w, h], [w, 0, w, h]];
   show({ els: [vid, vid], rects: swap ? halves.reverse() : halves, w, h });
@@ -142,6 +146,7 @@ async function showVideo(blob, swap) {
   const gen = ++videoGen; // 이전 영상의 프레임 콜백이 남아 루프가 겹치지 않게
   const tick = () => { if (gen === videoGen && src?.els[0] === vid) { draw(); vid.requestVideoFrameCallback(tick); } };
   vid.requestVideoFrameCallback(tick);
+  return true;
 }
 
 // ---------- 보기 ----------

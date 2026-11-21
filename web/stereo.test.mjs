@@ -1,6 +1,7 @@
 // node web/stereo.test.mjs
 import assert from 'node:assert/strict';
 import { estimateDx, judge } from './stereo.js';
+import './heic.unit.test.mjs';
 
 // 무늬 있는 오른눈 그림을 만들고, 왼눈은 12px 오른쪽으로 민 그림. 둘을 SBS로 붙인다.
 const w = 640, h = 360, shift = 12;
