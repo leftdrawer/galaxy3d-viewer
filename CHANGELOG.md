@@ -2,6 +2,14 @@
 
 > 규칙: 상위 `C:\AI Projects\AGENTS.md`. 최신 항목이 위. 작업 규칙은 `AGENTS.md`.
 
+## 2026-11-18 — astryx 테마 이식으로 UX/UI 정비
+
+- 무엇을 바꿨는지 / 사용자 지시: "astryx와 stageshow를 활용해 웹에 배포된 사이트 UXUI 손보기", 테마만 이식하고 HIG는 보조 기준. Neutral 0.7.16을 화면 기준으로 두고, Figtree를 저장소에 넣어 외부 글꼴 요청 없이 쓰게 했다. 테마 CSS가 비워 둔 글꼴 두께·간격 토큰을 채우고, 카드·끌어놓기 테두리를 구분되는 중립색으로 올렸다. 3D로 그리는 코드와 한국어 문구는 그대로다. stageshow 삽화는 넣지 않았다.
+- 왜: 이 페이지는 파일을 골라 입체로 보는 도구라, 사진과 적청 확인을 방해하지 않는 무채색 Neutral이 맞다. 테마 파일만 두면 제목 굵기가 빠지고 라틴 글꼴이 로드되지 않는다. 44px 터치, 포커스, 대비, 라이트/다크, 동작 줄이기는 토큰 밖의 보조 기준이다.
+- 관련 파일: `web/index.html`, `web/sw.js`, `web/manifest.webmanifest`, `web/vendor/astryx/`, `web/vendor/astryx-theme-neutral-0.7.16.css`, `DESIGN.md`, `AGENTS.md`
+- 작업자: Cursor Cloud Agent (Grok Bot 구록이 경유)
+- 남은 일·확인 필요: 샘플 3D 파일로 평행/교차, 조절 패널, 크기 보정 창을 폰 가로 전체화면에서 볼 것. 이미 설치된 앱이 `g3d-v12` 캐시로 글꼴까지 받는지 볼 것.
+
 ## 2026-11-17 — Astryx Neutral 뷰어 화면 적용
 
 - Astryx Neutral 0.7.16과 MIT 라이선스를 `web/vendor/`에 고정 포함하고 정적 뷰어 UI를 토큰 기반으로 정리했다. 기존 DOM ID·파일 입력·검정 감상 무대·기기 내 처리 동작을 유지했고 `web/app.js`는 수정하지 않았다. 서비스 워커를 `g3d-v11`로 올리고 테마 CSS를 오프라인 셸에 추가했다.
