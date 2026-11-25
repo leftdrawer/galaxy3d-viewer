@@ -244,5 +244,34 @@
 </dialog>
 
 <script type="module" src="app.js"></script>
+<!-- eunho-fx: libraries.dev 효과(Border beam·Liquid metal·Image generation·Gooey·Distortion waves·Magnetic UI·Thinking orbs)를 React 없이 옮긴 것. 원작 MIT © Jakub Antalik -->
+<link rel="stylesheet" href="vendor/eunho-fx.css?v=1">
+<style id="eunho-fx-page">/* 갤럭시 3D 뷰어 — eunho-fx 색 맞춤 (은하 청보라) */
+:root{ --fx-beam-a:#6f86ff; --fx-beam-b:#c9b8ff; --fx-metal-1:#3b3f4a; --fx-metal-2:#8b93a7; --fx-metal-3:#5b6170; --fx-metal-hi:#ffffff; --fx-light:rgba(111,134,255,.08); }
+@media (prefers-color-scheme: dark){ :root{ --fx-metal-1:#9aa3b8; --fx-metal-2:#eef1f8; --fx-metal-3:#b9c0d0; --fx-metal-hi:#ffffff; --fx-light:rgba(170,185,255,.07); } }
+.fx-busy-orb{ display:block; margin:10px 0 2px; }
+.fx-busy-orb[hidden]{ display:none; }
+</style>
+<script src="vendor/eunho-fx.js?v=1"></script>
+<script id="eunho-fx-init">/* 갤럭시 3D 뷰어 — libraries.dev 효과 연결 (eunho-fx). 디코딩·입체 표시 로직은 건드리지 않는다. 보기 화면(입체)에는 효과를 넣지 않는다. */
+(function(){
+  if(!window.EunhoFX) return;
+  var FX = window.EunhoFX, $ = function(id){ return document.getElementById(id); };
+  FX.metal(document.querySelector('#home h1'));                       // Liquid metal: 제목에 은빛이 스친다
+  FX.auto({ magnetic: '.pick', light: '.pick, .drop' });               // Magnetic UI·커서 빛 (마우스 화면만)
+  // Border beam: 파일을 끌어 올리면 놓을 자리 둘레에 빛이 돈다
+  var drop = $('drop');
+  if(drop){ var db = FX.beam(drop, {active:false});
+    new MutationObserver(function(){ drop.classList.contains('over') ? db.on() : db.off(); }).observe(drop, {attributes:true, attributeFilter:['class']}); }
+  // Thinking orb: 디코딩하는 동안 '맞춰지는 큐브' 구슬
+  var busy = $('busy'), bt = $('busytext');
+  if(busy && bt){ var orb = FX.orbEl(null); orb.className = 'fx-orb fx-busy-orb'; bt.parentNode.insertBefore(orb, bt);
+    var sync = function(){ FX.orb(orb, busy.hidden ? null : 'solving', 32, {label:'파일을 푸는 중'}); orb.hidden = busy.hidden; };
+    new MutationObserver(sync).observe(busy, {attributes:true, attributeFilter:['hidden']}); sync(); }
+  // Distortion waves: 첫 화면에서 보기 화면으로 넘어갈 때 한 번 물결
+  var view = $('view');
+  if(view) new MutationObserver(function(){ if(!view.hidden) FX.wave(view, {ms:620, scale:30}); }).observe(view, {attributes:true, attributeFilter:['hidden']});
+})();
+</script>
 </body>
 </html>

@@ -2,6 +2,15 @@
 
 > 규칙: 상위 `C:\AI Projects\AGENTS.md`. 최신 항목이 위. 작업 규칙은 `AGENTS.md`.
 
+## 2026-11-25 — libraries.dev 효과 적용 (eunho-fx)
+
+- 무엇: 은호당님 지시("libraries.dev 효과 컴포넌트 중 어울리는 것을 내 AI 페이지 전부에 적용"). libraries.dev 라이브러리(border-beam·thinking-orbs·liquid-gooey·metal-fx·img-fx)는 React 18 전용이라, 같은 효과를 React 없이 쓰는 공용 파일 eunho-fx 1.0(CSS+JS, gzip 약 10KB, thinking-orbs 엔진 MIT 포함)을 붙였다.
+- 이 페이지에 쓴 것: 제목 은빛(Liquid metal), 파일을 끌어 올리면 놓을 자리 둘레 빛, 디코딩 중 구슬(`solving`), 첫 화면→보기 화면 넘어갈 때 물결 한 번, 고르기 단추 자석·커서 빛. 입체 감상 화면 안에는 효과를 넣지 않음.
+- 관련 파일: `web/index.html`, `web/vendor/eunho-fx.js`·`eunho-fx.css`·`eunho-fx-LICENSE.txt`(새로), `CHANGELOG.md`
+- 남은 일: 커밋·푸시(=GitHub Pages 반영)는 은호당님 승인 후.
+- 지킨 것: 계산·저장·전송 로직과 글자(문구)는 바꾸지 않았다. `prefers-reduced-motion`이면 움직임이 모두 멈추고, 자석·커서 빛은 마우스가 있는 큰 화면에서만 켜진다. 화면 밖·숨은 탭에서는 멈춘다.
+- 작업자: Grok Bot (백업: `C:\Users\phlog\ai-audit\backups\20261125-2045\`)
+
 ## 2026-11-21 — 저장소 점검
 
 - 무엇: 영상을 재생하지 못하면 오류 안내 뒤에 빈 감상 화면을 다시 열던 흐름을 끊었다. HEIC `ster` 그룹 파서와 평면 JPEG 거부를 샘플 없이 검사하게 했다. 배포 설정은 건드리지 않았다.
